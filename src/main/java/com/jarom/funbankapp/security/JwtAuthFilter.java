@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.lang.NonNull;
 
-
 import java.io.IOException;
 import java.util.Collections;
 
@@ -30,24 +29,36 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println("🔐 JwtAuthFilter triggered");
+
         final String authHeader = request.getHeader("Authorization");
+//        System.out.println("🔎 Authorization Header: " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            if (authHeader != null) {
+                System.out.println("⛔ Malformed Bearer token: " + authHeader);
+            }
             filterChain.doFilter(request, response);
             return;
         }
 
+
         final String jwt = authHeader.substring(7);
+        System.out.println("🔑 Extracted JWT: " + jwt);
+
         final String username = jwtService.extractUsername(jwt);
+        System.out.println("👤 Username extracted from token: " + username);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            // NOTE: we aren't loading roles/authorities yet — just identifying the user
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(username, null, Collections.emptyList());
 
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
+            System.out.println("✅ Authenticated user set in context: " + username);
+        } else {
+            System.out.println("⚠️ Username is null or already authenticated");
         }
 
         filterChain.doFilter(request, response);
