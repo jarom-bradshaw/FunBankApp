@@ -50,4 +50,10 @@ public class AccountDAO {
         String sql = "SELECT balance FROM accounts WHERE id = ?";
         return jdbcTemplate.queryForObject(sql, BigDecimal.class, accountId);
     }
+
+    public void updateBalance(int accountId, BigDecimal newBalance) {
+        String sql = "UPDATE accounts SET balance = ? WHERE id = ?";
+        jdbcTemplate.update(sql, newBalance, accountId);
+    }
+
 }
