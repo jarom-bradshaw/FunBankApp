@@ -26,6 +26,7 @@ public class SecurityConfig {
         return http.build();
     }
 
+//    Added hashing here.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

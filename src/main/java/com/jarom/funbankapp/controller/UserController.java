@@ -13,7 +13,7 @@ public class UserController {
     private final UserDAO userDAO;
     private final PasswordEncoder passwordEncoder;
 
-    // ✅ Constructor-based injection — clean & warning-free
+// Added hashing here
     public UserController(UserDAO userDAO, PasswordEncoder passwordEncoder) {
         this.userDAO = userDAO;
         this.passwordEncoder = passwordEncoder;
@@ -25,6 +25,7 @@ public class UserController {
             return ResponseEntity.badRequest().body("Username already exists.");
         }
 
+//        Hashing here
         String hashedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
 
