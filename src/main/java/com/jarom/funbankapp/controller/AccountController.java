@@ -4,6 +4,11 @@ import com.jarom.funbankapp.model.Account;
 import com.jarom.funbankapp.model.User;
 import com.jarom.funbankapp.repository.AccountDAO;
 import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.TransactionDAO;
+import com.jarom.funbankapp.dto.DepositRequest;
+import com.jarom.funbankapp.dto.WithdrawRequest;
+import com.jarom.funbankapp.dto.TransferRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,10 +23,12 @@ public class AccountController {
 
     private final AccountDAO accountDAO;
     private final UserDAO userDAO;
+    private final TransactionDAO transactionDAO;
 
-    public AccountController(AccountDAO accountDAO, UserDAO userDAO) {
+    public AccountController(AccountDAO accountDAO, UserDAO userDAO, TransactionDAO transactionDAO) {
         this.accountDAO = accountDAO;
         this.userDAO = userDAO;
+        this.transactionDAO = transactionDAO;
     }
 
     // Create a new account
@@ -44,6 +51,108 @@ public class AccountController {
 
         List<Account> accounts = accountDAO.findByUserId(user.getId());
         return ResponseEntity.ok(accounts);
+    }
+
+    // Deposit endpoint
+    @PostMapping("/deposit")
+    public ResponseEntity<?> deposit(@RequestBody DepositRequest request) {
+        String username = getCurrentUsername();
+        User user = userDAO.findByUsername(username);
+
+        if (!userOwnsAccount(user, request.getAccountId())) {
+            return ResponseEntity.status(403).body("Unauthorized: You don't own this account.");
+        }
+
+        BigDecimal currentBalance = accountDAO.getBalance(request.getAccountId());
+        BigDecimal newBalance = currentBalance.add(request.getAmount());
+
+        accountDAO.updateBalance(request.getAccountId(), newBalance);
+
+        transactionDAO.logTransaction(
+                request.getAccountId(),
+                "deposit",
+                request.getAmount(),
+                request.getDescription() != null ? request.getDescription() : "Deposit"
+        );
+
+        return ResponseEntity.ok("Deposit successful. New balance: $" + newBalance);
+    }
+
+    // Withdraw endpoint
+    @PostMapping("/withdraw")
+    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequest request) {
+        String username = getCurrentUsername();
+        User user = userDAO.findByUsername(username);
+
+        if (!userOwnsAccount(user, request.getAccountId())) {
+            return ResponseEntity.status(403).body("Unauthorized: You don't own this account.");
+        }
+
+        BigDecimal currentBalance = accountDAO.getBalance(request.getAccountId());
+
+        if (request.getAmount().compareTo(currentBalance) > 0) {
+            return ResponseEntity.badRequest().body("Insufficient funds.");
+        }
+
+        BigDecimal newBalance = currentBalance.subtract(request.getAmount());
+
+        accountDAO.updateBalance(request.getAccountId(), newBalance);
+
+        transactionDAO.logTransaction(
+                request.getAccountId(),
+                "withdraw",
+                request.getAmount(),
+                request.getDescription() != null ? request.getDescription() : "Withdrawal"
+        );
+
+        return ResponseEntity.ok("Withdrawal successful. New balance: $" + newBalance);
+    }
+
+    // Transfer endpoint
+    @PostMapping("/transfer")
+    public ResponseEntity<?> transfer(@RequestBody TransferRequest request) {
+        String username = getCurrentUsername();
+        User user = userDAO.findByUsername(username);
+
+        if (!userOwnsAccount(user, request.getFromAccountId())) {
+            return ResponseEntity.status(403).body("Unauthorized: You don't own the source account.");
+        }
+
+        BigDecimal fromBalance = accountDAO.getBalance(request.getFromAccountId());
+
+        if (request.getAmount().compareTo(fromBalance) > 0) {
+            return ResponseEntity.badRequest().body("Insufficient funds.");
+        }
+
+        BigDecimal toBalance = accountDAO.getBalance(request.getToAccountId());
+        BigDecimal newFromBalance = fromBalance.subtract(request.getAmount());
+        BigDecimal newToBalance = toBalance.add(request.getAmount());
+
+        accountDAO.updateBalance(request.getFromAccountId(), newFromBalance);
+        accountDAO.updateBalance(request.getToAccountId(), newToBalance);
+
+        transactionDAO.logTransaction(
+                request.getFromAccountId(),
+                "transfer",
+                request.getAmount(),
+                request.getDescription() != null ? request.getDescription() : "Transfer to account " + request.getToAccountId()
+        );
+
+        transactionDAO.logTransaction(
+                request.getToAccountId(),
+                "deposit",
+                request.getAmount(),
+                "Transfer from account " + request.getFromAccountId()
+        );
+
+        return ResponseEntity.ok("Transfer successful.");
+    }
+
+    // Reusable method to verify account ownership
+    private boolean userOwnsAccount(User user, int accountId) {
+        return accountDAO.findByUserId(user.getId())
+                .stream()
+                .anyMatch(acc -> acc.getId() == accountId);
     }
 
     // Helper method to get username from JWT
