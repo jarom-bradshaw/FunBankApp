@@ -17,8 +17,8 @@ I am using Java Springboot framework. I am using JDK 21 Amazon Correto version. 
 # Useful Websites
 
 
-- [How to hash user data and passwords]((https://www.baeldung.com/spring-security-registration-password-encoding-bcrypt))
-- [How to set up JWT Authentication]((https://www.javaguides.net/2024/01/spring-boot-security-jwt-tutorial.html)])
+- [How to hash user data and passwords](https://www.baeldung.com/spring-security-registration-password-encoding-bcrypt)
+- [How to set up JWT Authentication](https://www.javaguides.net/2024/01/spring-boot-security-jwt-tutorial.html)
 - [How to automate Swagger Documentation](https://swagger.io/docs/)
 
 # Future Work
