@@ -1,21 +1,28 @@
 # Overview
 
-I love finances and want to work in fintech someday. And the other day my brother told me he wanted to rent and build a 4-plex that he designed. He is a architect for the state of Nevada. I was curious about how much money he could make investing the down payment on the 4-plex, so I started analyzing the money on a spreadsheet.
+I have a strong passion for finance and aspire to work in the fintech industry. Recently, my brother, an architect for the state of Nevada, expressed interest in renting and building a 4-plex he designed. This inspired me to analyze the financial aspects of such an investment using a spreadsheet.
 
-Then I determined I would just build a documented mini hybrid bank app that aims to be connectible to real banks and a place that is safe and secure to put your data. I aim to implement API with Ollama to do some math on the balance available and provide a high level summary.
+To take this further, I decided to develop a mini hybrid banking application. This app is designed to connect with real banks and provide a secure environment for user data. It includes features such as balance calculations and high-level summaries using APIs integrated with Ollama.
 
-I also have hashed passwords and created Swagger documentation for the API's I have built out. 
+I have implemented secure password hashing and created comprehensive Swagger documentation for the APIs I developed.
 
 [Software Demo Video](http://youtube.link.goes.here)
 
 # Development Environment
 
-Currently, I am hosting this on my SQL server. I am using JBDC for Database connectivity instead of JPA. That was a significant architecture decision, as I did not want to have more runtime by using JPA.
+- **Database**: Hosted on my SQL server, using JDBC for database connectivity to ensure efficient runtime performance.
+- **Framework**: Java Spring Boot
+- **JDK**: Amazon Corretto 21
+- **Build Tool**: Gradle
+- **Libraries**: Bean, Lombok, and others (to be documented)
 
-I am using Java Springboot framework. I am using JDK 21 Amazon Correto version. I am using Gradle, Bean, Lombok for clean code and a few other libraries, that I will document after being sure I am using them.
+# Key Features
+
+- **Secure Authentication**: Implemented password hashing using BCrypt to ensure user data security.
+- **API Documentation**: Automated Swagger documentation for easy API reference and testing.
+- **Financial Analysis**: Integrated with Ollama API to perform financial calculations and provide summaries.
 
 # Useful Websites
-
 
 - [How to hash user data and passwords](https://www.baeldung.com/spring-security-registration-password-encoding-bcrypt)
 - [How to set up JWT Authentication](https://www.javaguides.net/2024/01/spring-boot-security-jwt-tutorial.html)
@@ -23,4 +30,4 @@ I am using Java Springboot framework. I am using JDK 21 Amazon Correto version. 
 
 # Future Work
 
-I have this listed out on a Trello Board as I am currently working on this alone and hope to work with other people. If you are good at frontend and graphic design, please reach out to me at jarombrads@gmail.com I'd love to work with you to publish this application.
+I have outlined future enhancements on a Trello board. As I am currently working on this project alone, I am seeking collaborators, especially those skilled in frontend development and graphic design. If interested, please reach out to me at jarombrads@gmail.com. I would love to work with you to bring this application to fruition.
