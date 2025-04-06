@@ -20,7 +20,7 @@ I have implemented secure password hashing and created comprehensive Swagger doc
 
 - **Secure Authentication**: Implemented password hashing using BCrypt to ensure user data security.
 - **API Documentation**: Automated Swagger documentation for easy API reference and testing.
-- **Financial Analysis**: Integrated with Ollama API to perform financial calculations and provide summaries.
+- TODO: **Financial Analysis**: Integrated with Ollama API to perform financial calculations and provide summaries.
 
 # Useful Websites
 
@@ -29,5 +29,7 @@ I have implemented secure password hashing and created comprehensive Swagger doc
 - [How to automate Swagger Documentation](https://swagger.io/docs/)
 
 # Future Work
+
+Note: This product is in the making. I am currently only locally hosting it and will later push it to the cloud.
 
 I have outlined future enhancements on a Trello board. As I am currently working on this project alone, I am seeking collaborators, especially those skilled in frontend development and graphic design. If interested, please reach out to me at jarombrads@gmail.com. I would love to work with you to bring this application to fruition.
