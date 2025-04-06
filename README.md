@@ -6,7 +6,7 @@ To take this further, I decided to develop a mini hybrid banking application. Th
 
 I have implemented secure password hashing and created comprehensive Swagger documentation for the APIs I developed.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/hWKAgCgMUdQ)
 
 # Development Environment
 
