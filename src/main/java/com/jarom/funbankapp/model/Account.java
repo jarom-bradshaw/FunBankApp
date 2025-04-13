@@ -17,4 +17,5 @@ public class Account {
     private BigDecimal balance;
     private String accountType;
     private Timestamp createdAt;
+    // Should add type that sets dependencies on fees, etc. according to the type set(e.g. checkings, savings, etc.)
 }
