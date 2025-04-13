@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -37,7 +38,10 @@ public class AccountController {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
+        request.setAccountNumber(UUID.randomUUID().toString());
+
         request.setUserId(user.getId());
+
         accountDAO.createAccount(request);
 
         return ResponseEntity.ok("Account created.");
@@ -59,7 +63,20 @@ public class AccountController {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
+        System.out.println("🔍 Checking account ownership");
+        System.out.println("👤 User ID: " + user.getId());
+        System.out.println("📥 Deposit accountId: " + request.getAccountId());
+
+        List<Account> owned = accountDAO.findByUserId(user.getId());
+        owned.forEach(acc -> System.out.println("✅ User owns: " + acc.getId()));
+
+
         if (!userOwnsAccount(user, request.getAccountId())) {
+            System.out.println("👤 Logged in as: " + username);
+            System.out.println("🔍 Verifying ownership of accountId: " + request.getAccountId());
+            List<Account> accounts = accountDAO.findByUserId(user.getId());
+            accounts.forEach(acc -> System.out.println("✅ User owns accountId: " + acc.getId()));
+
             return ResponseEntity.status(403).body("Unauthorized: You don't own this account.");
         }
 
@@ -150,9 +167,11 @@ public class AccountController {
 
     // Reusable method to verify account ownership
     private boolean userOwnsAccount(User user, int accountId) {
+        System.out.println("🧪 Checking if user owns accountId: " + accountId);
         return accountDAO.findByUserId(user.getId())
                 .stream()
                 .anyMatch(acc -> acc.getId() == accountId);
+
     }
 
     // Helper method to get username from JWT
