@@ -27,6 +27,7 @@ I have implemented secure password hashing and created comprehensive Swagger doc
 - [How to hash user data and passwords](https://www.baeldung.com/spring-security-registration-password-encoding-bcrypt)
 - [How to set up JWT Authentication](https://www.javaguides.net/2024/01/spring-boot-security-jwt-tutorial.html)
 - [How to automate Swagger Documentation](https://swagger.io/docs/)
+- [Best Tips for Springboot Security (Bcrypt, etc.)](https://github.com/ZeroSTF/Spring-Security-Best-Practices)
 
 # Future Work
 
