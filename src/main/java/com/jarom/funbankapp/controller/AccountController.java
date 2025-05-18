@@ -8,6 +8,7 @@ import com.jarom.funbankapp.repository.TransactionDAO;
 import com.jarom.funbankapp.dto.DepositRequest;
 import com.jarom.funbankapp.dto.WithdrawRequest;
 import com.jarom.funbankapp.dto.TransferRequest;
+import com.jarom.funbankapp.service.FinancialAnalysisService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,22 +19,33 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
 @RestController
 @RequestMapping("/api/accounts")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Accounts", description = "Account management and transactions")
 public class AccountController {
 
     private final AccountDAO accountDAO;
     private final UserDAO userDAO;
     private final TransactionDAO transactionDAO;
+    private final FinancialAnalysisService financialAnalysisService;
 
-    public AccountController(AccountDAO accountDAO, UserDAO userDAO, TransactionDAO transactionDAO) {
+    public AccountController(AccountDAO accountDAO, UserDAO userDAO, TransactionDAO transactionDAO, FinancialAnalysisService financialAnalysisService) {
         this.accountDAO = accountDAO;
         this.userDAO = userDAO;
         this.transactionDAO = transactionDAO;
+        this.financialAnalysisService = financialAnalysisService;
     }
 
     // Create a new account
     @PostMapping
+    @Operation(summary = "Create a new account", description = "Creates a new account for the authenticated user.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Account created successfully")
+    })
     public ResponseEntity<?> createAccount(@RequestBody Account request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
@@ -49,6 +61,10 @@ public class AccountController {
 
     // Get all accounts for the logged-in user
     @GetMapping
+    @Operation(summary = "Get user accounts", description = "Retrieves all accounts for the authenticated user.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully")
+    })
     public ResponseEntity<List<Account>> getUserAccounts() {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
@@ -59,6 +75,11 @@ public class AccountController {
 
     // Deposit endpoint
     @PostMapping("/deposit")
+    @Operation(summary = "Deposit funds", description = "Deposits funds into a user-owned account.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Deposit successful"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account.")
+    })
     public ResponseEntity<?> deposit(@RequestBody DepositRequest request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
@@ -97,6 +118,12 @@ public class AccountController {
 
     // Withdraw endpoint
     @PostMapping("/withdraw")
+    @Operation(summary = "Withdraw funds", description = "Withdraws funds from a user-owned account.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Withdrawal successful"),
+        @ApiResponse(responseCode = "400", description = "Insufficient funds."),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account.")
+    })
     public ResponseEntity<?> withdraw(@RequestBody WithdrawRequest request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
@@ -127,6 +154,12 @@ public class AccountController {
 
     // Transfer endpoint
     @PostMapping("/transfer")
+    @Operation(summary = "Transfer funds", description = "Transfers funds between user accounts.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Transfer successful"),
+        @ApiResponse(responseCode = "400", description = "Insufficient funds."),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own the source account.")
+    })
     public ResponseEntity<?> transfer(@RequestBody TransferRequest request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
@@ -163,6 +196,18 @@ public class AccountController {
         );
 
         return ResponseEntity.ok("Transfer successful.");
+    }
+
+    // Financial analysis endpoint (placeholder)
+    @PostMapping("/analyze")
+    @Operation(summary = "Analyze financial data", description = "Performs financial analysis using the Ollama API (placeholder).")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Analysis result returned")
+    })
+    public ResponseEntity<?> analyzeFinancialData(@RequestBody String inputData) {
+        // TODO: Define input/output structure
+        String result = financialAnalysisService.analyzeWithOllama(inputData);
+        return ResponseEntity.ok(result);
     }
 
     // Reusable method to verify account ownership
