@@ -8,6 +8,97 @@ I have implemented secure password hashing and created comprehensive Swagger doc
 
 [Software Demo Video](https://youtu.be/hWKAgCgMUdQ)
 
+# Setup Instructions
+
+## Prerequisites
+- Java 21 (Amazon Corretto recommended)
+- Gradle
+- MySQL server (or compatible database)
+
+## Backend Setup
+1. Clone the repository.
+2. Configure your database connection in `application.properties` (not included here; see Spring Boot docs).
+3. Run database migrations or create the required schema/tables.
+4. Build and run the backend:
+   ```sh
+   ./gradlew bootRun
+   ```
+5. Access Swagger UI at `http://localhost:8080/swagger-ui.html` for API docs and testing.
+
+## Running Tests
+```sh
+./gradlew test
+```
+
+# Features
+- User registration and login with JWT authentication
+- Secure password hashing (BCrypt)
+- Account creation, deposit, withdraw, and transfer endpoints
+- Transaction logging
+- API documentation via Swagger/OpenAPI
+- (Planned) Financial analysis using Ollama API
+
+# API Usage Examples
+
+## Register
+```
+POST /api/users/register
+{
+  "username": "alice",
+  "password": "password123"
+}
+```
+
+## Login
+```
+POST /api/users/login
+{
+  "username": "alice",
+  "password": "password123"
+}
+Response: Bearer <jwt-token>
+```
+
+## Get Accounts (Authenticated)
+```
+GET /api/accounts
+Authorization: Bearer <jwt-token>
+```
+
+## Deposit
+```
+POST /api/accounts/deposit
+Authorization: Bearer <jwt-token>
+{
+  "accountId": 1,
+  "amount": 100.00,
+  "description": "Initial deposit"
+}
+```
+
+## Withdraw
+```
+POST /api/accounts/withdraw
+Authorization: Bearer <jwt-token>
+{
+  "accountId": 1,
+  "amount": 50.00,
+  "description": "ATM withdrawal"
+}
+```
+
+## Transfer
+```
+POST /api/accounts/transfer
+Authorization: Bearer <jwt-token>
+{
+  "fromAccountId": 1,
+  "toAccountId": 2,
+  "amount": 25.00,
+  "description": "Transfer to savings"
+}
+```
+
 # Development Environment
 
 - **Database**: Hosted on my SQL server, using JDBC for database connectivity to ensure efficient runtime performance.
