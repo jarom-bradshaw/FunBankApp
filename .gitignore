@@ -47,3 +47,8 @@ out/
 
 ### Credentials ###
 application.properties
+
+# Node.js frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env

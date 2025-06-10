@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FunBank Interface Mockups</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 p-8">
+    <!-- Dashboard Mockup -->
+    <div class="max-w-7xl mx-auto mb-12">
+        <h2 class="text-2xl font-bold mb-4">Dashboard</h2>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Net Worth Card -->
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-800">Net Worth</h3>
+                    <p class="text-3xl font-bold text-blue-900">$125,000</p>
+                    <p class="text-green-600">↑ 2.5% this month</p>
+                </div>
+                <!-- Budget Status -->
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800">Monthly Budget</h3>
+                    <p class="text-3xl font-bold text-green-900">75%</p>
+                    <p class="text-green-600">On track</p>
+                </div>
+                <!-- Recent Transactions -->
+                <div class="bg-purple-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-800">Recent Transactions</h3>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>Grocery Store</span>
+                            <span class="text-red-600">-$85.50</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Salary</span>
+                            <span class="text-green-600">+$3,500</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Quick Actions -->
+            <div class="flex space-x-4 mb-6">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded">Add Transaction</button>
+                <button class="bg-green-500 text-white px-4 py-2 rounded">Set Budget</button>
+                <button class="bg-purple-500 text-white px-4 py-2 rounded">Chat with AI</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat Interface -->
+    <div class="max-w-7xl mx-auto mb-12">
+        <h2 class="text-2xl font-bold mb-4">AI Chat Interface</h2>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="h-96 flex flex-col">
+                <!-- Chat Messages -->
+                <div class="flex-1 overflow-y-auto mb-4 space-y-4">
+                    <div class="flex justify-start">
+                        <div class="bg-gray-100 rounded-lg p-3 max-w-lg">
+                            <p class="text-sm">How can I improve my savings?</p>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <div class="bg-blue-100 rounded-lg p-3 max-w-lg">
+                            <p class="text-sm">Based on your spending patterns, I recommend setting up automatic
+                                transfers to your savings account. Would you like me to help you create a savings plan?
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Input Area -->
+                <div class="border-t pt-4">
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Ask me anything about your finances..."
+                            class="flex-1 border rounded-lg px-4 py-2">
+                        <button class="bg-blue-500 text-white px-6 py-2 rounded-lg">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Management -->
+    <div class="max-w-7xl mx-auto mb-12">
+        <h2 class="text-2xl font-bold mb-4">Budget Management</h2>
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold mb-4">Monthly Budget Overview</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>Groceries</span>
+                            <span>$400 / $500</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>Entertainment</span>
+                            <span>$250 / $300</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 83%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-1">
+                            <span>Transportation</span>
+                            <span>$180 / $200</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Budget Controls -->
+            <div class="flex space-x-4">
+                <button class="bg-blue-500 text-white px-4 py-2 rounded">Add Category</button>
+                <button class="bg-green-500 text-white px-4 py-2 rounded">Adjust Budget</button>
+                <button class="bg-purple-500 text-white px-4 py-2 rounded">View History</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
