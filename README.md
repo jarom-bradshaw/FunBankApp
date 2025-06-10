@@ -125,3 +125,11 @@ Authorization: Bearer <jwt-token>
 Note: This product is in the making. I am currently only locally hosting it and will later push it to the cloud.
 
 I have outlined future enhancements on a Trello board. As I am currently working on this project alone, I am seeking collaborators, especially those skilled in frontend development and graphic design. If interested, please reach out to me at jarombrads@gmail.com. I would love to work with you to bring this application to fruition.
+
+# Documentation
+
+See the `docs/` directory for detailed documentation:
+- [Backend Setup & Usage](docs/backend.md)
+- [Frontend Setup & Usage](docs/frontend.md)
+- [Project Structure](docs/project-structure.md)
+- [Requirements & Prerequisites](docs/requirements.md)
