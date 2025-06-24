@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
+    setIsLoading(true);
+    setError('');
+    
     try {
       const res = await fetch('http://localhost:8080/api/users/login', {
         method: 'POST',
@@ -29,18 +35,24 @@ const Login = () => {
       }
 
       const token = await res.text();
-      // Store the token in localStorage
-      localStorage.setItem('token', token);
+      console.log('Login - received token:', token.substring(0, 20) + '...');
       
-      // Add token to Authorization header for future requests
-      const headers = new Headers();
-      headers.append('Authorization', `Bearer ${token}`);
+      // Use AuthContext to update authentication state
+      login(token, { username: data.username });
       
-      // Navigate to dashboard or home page
+      // Add a small delay to ensure token is properly saved
+      console.log('Login - waiting for token to be saved...');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Login - navigating to dashboard');
+      // Navigate to dashboard
       navigate('/dashboard');
+      
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -62,6 +74,7 @@ const Login = () => {
                 type="text"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Username"
+                disabled={isLoading}
               />
               {errors.username && <span className="text-red-500 text-sm">Username is required</span>}
             </div>
@@ -73,6 +86,7 @@ const Login = () => {
                 type="password"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
+                disabled={isLoading}
               />
               {errors.password && <span className="text-red-500 text-sm">Password is required</span>}
             </div>
@@ -85,9 +99,10 @@ const Login = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

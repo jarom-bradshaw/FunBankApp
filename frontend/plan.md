@@ -5,8 +5,8 @@ Build a personal finance dashboard with a CFP-style AI chat advisor, allowing us
 - [X] Backend API for user authentication (JWT, Spring Boot, SQL). (backend/)
 - [X] Backend API for chat/advice endpoint (LLM/AI integration). (backend/)
 - [X] Backend API for account CRUD and data storage. (backend/)
-- [ ] User registration and login (JWT authentication). (backend/, frontend/)
-- [ ] Secure password hashing (BCrypt). (backend/)
+- [X] User registration and login (JWT authentication). (backend/, frontend/)
+- [X] Secure password hashing (BCrypt). (backend/)
 - [ ] Implement chat interface for behavioral financial advice (CFP-style). (frontend/src/pages/Chat.jsx, components/)
 - [ ] Store and display chat history for each user. (backend/, frontend/)
 - [ ] Manual account entry and editing (balance, type, name). (frontend/src/pages/Accounts.jsx, backend/)
@@ -45,4 +45,6 @@ Build a personal finance dashboard with a CFP-style AI chat advisor, allowing us
 - Mobile app (React Native or similar)
 
 ## Updates
-- MVP and plan updated to explicitly include backend API requirements for authentication, chat/advice, account CRUD, and data storage. 
+- MVP and plan updated to explicitly include backend API requirements for authentication, chat/advice, account CRUD, and data storage.
+- Fixed CORS issues and implemented proper authentication flow with protected routes
+- Added AuthContext and ProtectedRoute components for secure navigation 
