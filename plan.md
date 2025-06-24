@@ -1,17 +1,17 @@
 ## Goal
-Build a personal finance dashboard with a CFP-style AI chat advisor, allowing users to enter and visualize their accounts, chat for advice, and see their net worth.
+Fix the authentication token removal issue where the dashboard immediately removes the token after login, causing users to be redirected back to the login page.
 
 ## Task List
-- [X] Backend API for user authentication (JWT, Spring Boot, SQL). (backend/)
-- [X] Backend API for chat/advice endpoint (LLM/AI integration). (backend/)
-- [X] Backend API for account CRUD and data storage. (backend/)
-- [ ] User registration and login (JWT authentication). (backend/, frontend/)
-- [ ] Secure password hashing (BCrypt). (backend/)
-- [ ] Implement chat interface for behavioral financial advice (CFP-style). (frontend/src/pages/Chat.jsx, components/)
-- [ ] Store and display chat history for each user. (backend/, frontend/)
-- [ ] Manual account entry and editing (balance, type, name). (frontend/src/pages/Accounts.jsx, backend/)
-- [ ] Dashboard page to view accounts and net worth. (frontend/src/pages/Dashboard.jsx, backend/)
-- [ ] Project documentation (README, setup, requirements, docs/)
+- [ ] Investigate the authentication flow timing issue in `frontend/src/context/AuthContext.jsx`
+- [ ] Fix the race condition between token setting and API calls in `frontend/src/pages/Dashboard.jsx`
+- [ ] Update the Axios interceptor in `frontend/src/api/axios.ts` to handle token validation more gracefully
+- [ ] Add proper token validation before making API calls in the Dashboard component
+- [ ] Implement a token refresh mechanism or better error handling for expired tokens
+- [ ] Test the complete authentication flow from login to dashboard access
+- [ ] Add debugging logs to track token state throughout the authentication process
+- [ ] Ensure the AuthContext properly manages token state and localStorage synchronization
+- [ ] Update the ProtectedRoute component to handle authentication state changes properly
+- [ ] Verify that the backend JWT filter is working correctly with valid tokens
 
 ## Frontend Implementation Steps
 - [ ] Build chat UI for advice (Chat.jsx, MessageList, MessageInput components). (frontend/src/pages/, components/)

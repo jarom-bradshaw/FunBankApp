@@ -38,14 +38,23 @@ public class JwtService {
 
     public String extractUsername(String token) {
         try {
-            return Jwts.parserBuilder()
+            System.out.println("🔍 JWT Service - attempting to parse token: " + token.substring(0, Math.min(20, token.length())) + "...");
+            System.out.println("🔍 JWT Service - token length: " + token.length());
+            System.out.println("🔍 JWT Service - key initialized: " + (key != null));
+            
+            String username = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
+            
+            System.out.println("✅ JWT Service - successfully extracted username: " + username);
+            return username;
         } catch (Exception e) {
             System.out.println("❌ JWT parsing failed: " + e.getMessage());
+            System.out.println("❌ Exception type: " + e.getClass().getSimpleName());
+            e.printStackTrace();
             return null;
         }
     }

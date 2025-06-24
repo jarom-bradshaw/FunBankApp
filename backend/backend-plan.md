@@ -3,7 +3,7 @@
 ## Database Schema
 
 ### Core Tables
-- [ ] Users
+- [x] Users
   - id (PK)
   - username
   - password_hash
@@ -13,7 +13,7 @@
   - two_factor_enabled
   - preferences (JSON)
 
-- [ ] Accounts
+- [x] Accounts
   - id (PK)
   - user_id (FK)
   - name
@@ -24,7 +24,7 @@
   - created_at
   - last_updated
 
-- [ ] Transactions
+- [x] Transactions
   - id (PK)
   - account_id (FK)
   - amount
@@ -44,7 +44,7 @@
   - color
   - icon
 
-- [ ] Budgets
+- [x] Budgets
   - id (PK)
   - user_id (FK)
   - category_id (FK)
@@ -53,7 +53,7 @@
   - start_date
   - end_date
 
-- [ ] Goals
+- [x] Goals
   - id (PK)
   - user_id (FK)
   - name
@@ -86,22 +86,22 @@
 ## API Endpoints
 
 ### Authentication
-- [ ] POST /api/auth/register
-- [ ] POST /api/auth/login
-- [ ] POST /api/auth/logout
+- [x] POST /api/users/register
+- [x] POST /api/users/login
+- [x] POST /api/users/logout
 - [ ] POST /api/auth/refresh-token
 - [ ] POST /api/auth/2fa/enable
 - [ ] POST /api/auth/2fa/verify
 
 ### User Management
-- [ ] GET /api/users/profile
-- [ ] PUT /api/users/profile
-- [ ] PUT /api/users/password
+- [x] GET /api/users/profile
+- [x] PUT /api/users/profile
+- [x] PUT /api/users/password
 - [ ] PUT /api/users/preferences
 
 ### Account Management
-- [ ] GET /api/accounts
-- [ ] POST /api/accounts
+- [x] GET /api/accounts
+- [x] POST /api/accounts
 - [ ] GET /api/accounts/{id}
 - [ ] PUT /api/accounts/{id}
 - [ ] DELETE /api/accounts/{id}
@@ -109,29 +109,29 @@
 - [ ] GET /api/accounts/{id}/balance-history
 
 ### Transaction Management
-- [ ] GET /api/transactions
-- [ ] POST /api/transactions
-- [ ] GET /api/transactions/{id}
-- [ ] PUT /api/transactions/{id}
-- [ ] DELETE /api/transactions/{id}
-- [ ] POST /api/transactions/import
-- [ ] GET /api/transactions/categories
+- [x] GET /api/transactions
+- [x] POST /api/transactions
+- [x] GET /api/transactions/{id}
+- [x] PUT /api/transactions/{id}
+- [x] DELETE /api/transactions/{id}
+- [x] POST /api/transactions/import
+- [x] GET /api/transactions/categories
 
 ### Budget Management
-- [ ] GET /api/budgets
-- [ ] POST /api/budgets
-- [ ] GET /api/budgets/{id}
-- [ ] PUT /api/budgets/{id}
-- [ ] DELETE /api/budgets/{id}
-- [ ] GET /api/budgets/summary
+- [x] GET /api/budgets
+- [x] POST /api/budgets
+- [x] GET /api/budgets/{id}
+- [x] PUT /api/budgets/{id}
+- [x] DELETE /api/budgets/{id}
+- [x] GET /api/budgets/summary
 
 ### Goal Management
-- [ ] GET /api/goals
-- [ ] POST /api/goals
-- [ ] GET /api/goals/{id}
-- [ ] PUT /api/goals/{id}
-- [ ] DELETE /api/goals/{id}
-- [ ] GET /api/goals/progress
+- [x] GET /api/goals
+- [x] POST /api/goals
+- [x] GET /api/goals/{id}
+- [x] PUT /api/goals/{id}
+- [x] DELETE /api/goals/{id}
+- [x] GET /api/goals/progress
 
 ### Investment Management
 - [ ] GET /api/investments
@@ -150,47 +150,47 @@
 - [ ] GET /api/debts/summary
 
 ### Analytics
-- [ ] GET /api/analytics/spending
-- [ ] GET /api/analytics/income
-- [ ] GET /api/analytics/net-worth
-- [ ] GET /api/analytics/cash-flow
-- [ ] GET /api/analytics/investment-performance
+- [x] GET /api/analytics/spending
+- [x] GET /api/analytics/income
+- [x] GET /api/analytics/net-worth
+- [x] GET /api/analytics/cash-flow
+- [x] GET /api/analytics/investment-performance
 
 ### AI/ML Features
-- [ ] POST /api/ai/chat
-- [ ] GET /api/ai/recommendations
-- [ ] GET /api/ai/spending-patterns
-- [ ] GET /api/ai/anomaly-detection
+- [x] POST /api/ai/chat
+- [x] GET /api/ai/recommendations
+- [x] GET /api/ai/spending-patterns
+- [x] GET /api/ai/anomaly-detection
 
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
-1. [X] Set up Spring Boot project
-2. [X] Configure database connection
-3. [X] Implement basic security
-4. [X] Set up CORS
-5. [ ] Create base entity classes
-6. [ ] Implement repository interfaces
-7. [ ] Set up service layer structure
+1. [x] Set up Spring Boot project
+2. [x] Configure database connection
+3. [x] Implement basic security
+4. [x] Set up CORS
+5. [x] Create base entity classes
+6. [x] Implement repository interfaces
+7. [x] Set up service layer structure
 
 ### Phase 2: Authentication & User Management
-1. [X] Implement JWT authentication
-2. [ ] Create user registration
-3. [ ] Implement login/logout
-4. [ ] Add password hashing
-5. [ ] Set up user preferences
+1. [x] Implement JWT authentication
+2. [x] Create user registration
+3. [x] Implement login/logout
+4. [x] Add password hashing
+5. [x] Set up user preferences (basic profile endpoints)
 
 ### Phase 3: Account & Transaction Management
-1. [ ] Implement account CRUD
-2. [ ] Create transaction system
+1. [x] Implement account CRUD (basic create/view, update/delete optional)
+2. [x] Create transaction system
 3. [ ] Add category management
-4. [ ] Implement transaction import
-5. [ ] Add balance tracking
+4. [ ] Implement transaction import (basic import endpoint present)
+5. [x] Add balance tracking
 
 ### Phase 4: Budgeting & Goals
-1. [ ] Create budget system
-2. [ ] Implement goal tracking
-3. [ ] Add progress monitoring
+1. [x] Create budget system
+2. [x] Implement goal tracking
+3. [x] Add progress monitoring
 4. [ ] Create budget vs actual tracking
 
 ### Phase 5: Investment & Debt Management
@@ -200,16 +200,16 @@
 4. [ ] Implement payment scheduling
 
 ### Phase 6: Analytics & Reporting
-1. [ ] Create spending analysis
-2. [ ] Implement net worth tracking
-3. [ ] Add cash flow analysis
+1. [x] Create spending analysis
+2. [x] Implement net worth tracking
+3. [x] Add cash flow analysis
 4. [ ] Create custom reports
 
 ### Phase 7: AI/ML Integration
-1. [ ] Set up AI chat system
-2. [ ] Implement recommendations
-3. [ ] Add pattern detection
-4. [ ] Create anomaly detection
+1. [x] Set up AI chat system
+2. [x] Implement recommendations
+3. [x] Add pattern detection
+4. [x] Create anomaly detection
 
 ### Phase 8: Security & Optimization
 1. [ ] Implement 2FA

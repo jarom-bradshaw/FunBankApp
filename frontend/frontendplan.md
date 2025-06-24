@@ -3,14 +3,14 @@
 ## Project Setup
 
 ### Initial Setup
-- [ ] Create React project with Vite
-- [ ] Set up TypeScript
-- [ ] Configure ESLint and Prettier
-- [ ] Set up routing with React Router
+- [x] Create React project with Vite
+- [x] Set up TypeScript
+- [x] Configure ESLint and Prettier
+- [x] Set up routing with React Router
 - [ ] Configure environment variables
 - [ ] Set up API client (Axios)
 - [ ] Configure state management (Redux Toolkit)
-- [ ] Set up testing environment (Jest + React Testing Library)
+- [x] Set up testing environment (Jest + React Testing Library)
 
 ### UI Framework
 - [ ] Set up Material UI
