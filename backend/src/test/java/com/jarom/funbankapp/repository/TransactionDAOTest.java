@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class TransactionDAOTest {
+public class TransactionDAOTest {
 
     private JdbcTemplate jdbcTemplate;
     private TransactionDAO transactionDAO;
