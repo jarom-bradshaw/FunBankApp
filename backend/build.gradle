@@ -35,79 +35,13 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation 'org.mockito:mockito-core'
-	testImplementation 'com.h2database:h2'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // or gson
+
 }
 
-// Test configuration
-test {
+tasks.named('test') {
 	useJUnitPlatform()
-	
-	// Run tests in parallel for faster execution
-	maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-	
-	// Show standard output and error streams during test execution
-	testLogging {
-		events "passed", "skipped", "failed", "standardOut", "standardError"
-		showExceptions true
-		showCauses true
-		showStackTraces true
-		
-		// Show test results summary
-		info {
-			events "passed", "skipped", "failed"
-			displayGranularity 2
-		}
-	}
-	
-	// Include all test classes
-	include '**/*Test.class'
-	include '**/*Tests.class'
-	
-	// Exclude integration tests (if any) from unit test runs
-	exclude '**/*IntegrationTest.class'
-	
-	// Set system properties for tests
-	systemProperty 'spring.profiles.active', 'test'
-	systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
-	systemProperty 'junit.jupiter.execution.parallel.mode.default', 'concurrent'
-}
-
-// Task to run tests with detailed output
-task testDetailed(type: Test) {
-	useJUnitPlatform()
-	testLogging {
-		events "passed", "skipped", "failed", "standardOut", "standardError"
-		showExceptions true
-		showCauses true
-		showStackTraces true
-		exceptionFormat = 'full'
-	}
-}
-
-// Task to run only unit tests
-task unitTest(type: Test) {
-	useJUnitPlatform()
-	include '**/*Test.class'
-	exclude '**/*IntegrationTest.class'
-	exclude '**/*E2ETest.class'
-}
-
-// Task to run only integration tests
-task integrationTest(type: Test) {
-	useJUnitPlatform()
-	include '**/*IntegrationTest.class'
-}
-
-// Configure bootRun to run tests first
-bootRun {
-	dependsOn test
-}
-
-// Configure build to run tests
-build {
-	dependsOn test
 }

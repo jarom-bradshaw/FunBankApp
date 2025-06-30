@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-public class AccountDAOTest {
+class AccountDAOTest {
 
     private JdbcTemplate jdbcTemplate;
     private AccountDAO accountDAO;

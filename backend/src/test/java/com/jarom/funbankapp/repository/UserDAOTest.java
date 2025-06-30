@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class UserDAOTest {
+class UserDAOTest {
 
     private JdbcTemplate jdbcTemplate;
     private UserDAO userDAO;

@@ -15,8 +15,6 @@ const Login = () => {
     setError('');
     
     try {
-      console.log('Login - attempting login for user:', data.username);
-      
       const res = await fetch('http://localhost:8080/api/users/login', {
         method: 'POST',
         headers: { 
@@ -27,7 +25,7 @@ const Login = () => {
           username: data.username,
           password: data.password
         }),
-        credentials: 'include', // Important: sends/receives cookies
+        credentials: 'include',
         mode: 'cors',
       });
 
@@ -36,14 +34,15 @@ const Login = () => {
         throw new Error(errorText || 'Login failed');
       }
 
-      const responseText = await res.text();
-      console.log('Login - login successful, response:', responseText);
-      
-      // Check if cookie was set (browser handles this automatically)
-      console.log('Login - checking if authentication cookie was set');
+      const token = await res.text();
+      console.log('Login - received token:', token.substring(0, 20) + '...');
       
       // Use AuthContext to update authentication state
-      login({ username: data.username });
+      login(token, { username: data.username });
+      
+      // Add a small delay to ensure token is properly saved
+      console.log('Login - waiting for token to be saved...');
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log('Login - navigating to dashboard');
       // Navigate to dashboard
