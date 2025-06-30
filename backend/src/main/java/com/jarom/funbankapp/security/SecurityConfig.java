@@ -1,6 +1,6 @@
 package com.jarom.funbankapp.security;
 
-import com.jarom.funbankapp.security.CookieAuthFilter;
+import com.jarom.funbankapp.security.JwtAuthFilter;
 
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -23,32 +23,28 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final CookieAuthFilter cookieAuthFilter;
+    private final JwtAuthFilter jwtAuthFilter;
 
-    public SecurityConfig(CookieAuthFilter cookieAuthFilter) {
-        this.cookieAuthFilter = cookieAuthFilter;
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/users/login", "/api/users/register")
-                        .csrfTokenRepository(new org.springframework.security.web.csrf.CookieCsrfTokenRepository())
-                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users/login",
                                 "/api/users/register",
-                                "/api/users/csrf-token",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(cookieAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();
@@ -59,15 +55,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://localhost:5175"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-CSRF-TOKEN"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("X-CSRF-TOKEN"));
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
+    //    Added hashing here.
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -77,4 +73,5 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager(); // empty manager prevents auto-wiring errors
     }
+
 }
