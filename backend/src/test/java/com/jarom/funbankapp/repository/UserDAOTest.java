@@ -49,7 +49,7 @@ class UserDAOTest {
 
         when(jdbcTemplate.update(anyString(), anyString(), anyString(), anyString())).thenReturn(1);
 
-        Long result = userDAO.save(user);
+        int result = userDAO.save(user);
 
         assertEquals(1, result);
     }

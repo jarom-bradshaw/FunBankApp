@@ -77,7 +77,7 @@ public class BudgetController {
             return ResponseEntity.notFound().build();
         }
 
-        if (budget.getUserId() != user.getId()) {
+        if (!budget.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
         }
 
@@ -100,7 +100,7 @@ public class BudgetController {
             return ResponseEntity.notFound().build();
         }
 
-        if (existingBudget.getUserId() != user.getId()) {
+        if (!existingBudget.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
         }
 
@@ -128,7 +128,7 @@ public class BudgetController {
             return ResponseEntity.notFound().build();
         }
 
-        if (budget.getUserId() != user.getId()) {
+        if (!budget.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
         }
 

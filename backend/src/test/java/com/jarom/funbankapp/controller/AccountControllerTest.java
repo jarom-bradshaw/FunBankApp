@@ -280,18 +280,18 @@ public class AccountControllerTest {
     @WithMockUser(username = "testuser")
     public void testTransfer_InsufficientFunds() throws Exception {
         // Arrange
-        User dummyUser = createDummyUser("testuser", 1);
+        User dummyUser = createDummyUser("testuser", 1L);
         when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
 
         Account sourceAccount = new Account();
-        sourceAccount.setId(10);
-        sourceAccount.setUserId(1);
-        when(accountDAO.findByUserId(1)).thenReturn(Collections.singletonList(sourceAccount));
-        when(accountDAO.getBalance(10)).thenReturn(BigDecimal.valueOf(30));
+        sourceAccount.setId(10L);
+        sourceAccount.setUserId(1L);
+        when(accountDAO.findByUserId(1L)).thenReturn(Collections.singletonList(sourceAccount));
+        when(accountDAO.getBalance(10L)).thenReturn(BigDecimal.valueOf(30));
 
         TransferRequest transferRequest = new TransferRequest();
-        transferRequest.setFromAccountId(10);
-        transferRequest.setToAccountId(20);
+        transferRequest.setFromAccountId(10L);
+        transferRequest.setToAccountId(20L);
         transferRequest.setAmount(BigDecimal.valueOf(50));
 
         // Act & Assert: Expect a 400 Bad Request response with "Insufficient funds."
@@ -306,15 +306,15 @@ public class AccountControllerTest {
     @WithMockUser(username = "testuser")
     public void testTransfer_UnauthorizedSourceAccount() throws Exception {
         // Arrange
-        User dummyUser = createDummyUser("testuser", 1);
+        User dummyUser = createDummyUser("testuser", 1L);
         when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
 
         // Simulate that the user does not own the source account.
-        when(accountDAO.findByUserId(1)).thenReturn(Collections.emptyList());
+        when(accountDAO.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         TransferRequest transferRequest = new TransferRequest();
-        transferRequest.setFromAccountId(10);
-        transferRequest.setToAccountId(20);
+        transferRequest.setFromAccountId(10L);
+        transferRequest.setToAccountId(20L);
         transferRequest.setAmount(BigDecimal.valueOf(50));
 
         // Act & Assert: Expect 403 Forbidden with the appropriate message.
@@ -333,8 +333,8 @@ public class AccountControllerTest {
         when(financialAnalysisService.analyzeWithOllama(inputData)).thenReturn(expectedResult);
 
         mockMvc.perform(post("/api/accounts/analyze")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("\"" + inputData + "\"")) // JSON string
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content(inputData)) // Plain string
                 .andExpect(status().isOk())
                 .andExpect(content().string(expectedResult));
     }
