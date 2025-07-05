@@ -11,11 +11,14 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Account {
-    private int id;
-    private int userId;
+    private Long id;
+    private Long userId;
     private String accountNumber;
+    private String name;
+    private String color;
     private BigDecimal balance;
     private String accountType;
     private Timestamp createdAt;
+    private Timestamp updatedAt;
     // Should add type that sets dependencies on fees, etc. according to the type set(e.g. checkings, savings, etc.)
 }

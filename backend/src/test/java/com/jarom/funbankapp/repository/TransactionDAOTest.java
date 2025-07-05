@@ -29,7 +29,7 @@ class TransactionDAOTest {
     @Test
     void testLogTransaction() {
         // Arrange: Define transaction details
-        int accountId = 1;
+        Long accountId = 1L;
         String type = "deposit";
         BigDecimal amount = new BigDecimal("150.00");
         String description = "Deposit for savings";
@@ -60,15 +60,15 @@ class TransactionDAOTest {
     @Test
     void testFindByAccountId() {
         // Arrange: Set up an accountId and a dummy transaction list.
-        int accountId = 1;
-        Transaction transaction = new Transaction(
-                1,                              // id
-                accountId,                      // account_id
-                "withdrawal",                   // type
-                new BigDecimal("50.00"),         // amount
-                "ATM Withdrawal",               // description
-                new Timestamp(System.currentTimeMillis()) // created_at
-        );
+        Long accountId = 1L;
+        Transaction transaction = new Transaction();
+        transaction.setId(1L);
+        transaction.setAccountId(accountId);
+
+        transaction.setType("withdrawal");
+        transaction.setAmount(new BigDecimal("50.00"));
+        transaction.setDescription("ATM Withdrawal");
+        transaction.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         List<Transaction> expectedTransactions = Arrays.asList(transaction);
 
         // Simulate the jdbcTemplate query returning our list of transactions.

@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Transaction {
-    private int id;
-    private int accountId;
+    private Long id;
+    private Long accountId;
     private String type;         // "deposit", "withdraw", "transfer"
     private BigDecimal amount;
     private String description;

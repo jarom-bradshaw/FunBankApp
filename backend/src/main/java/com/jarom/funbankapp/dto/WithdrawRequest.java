@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 
 @Data
 public class WithdrawRequest {
-    private int accountId;
+    private Long accountId;
     private BigDecimal amount;
     private String description;
 }
