@@ -51,7 +51,7 @@ public class UserController {
             user.setPassword(hashedPassword);
             System.out.println("🔑 Password hashed successfully");
 
-            Long result = userDAO.save(user);
+            int result = userDAO.save(user);
             System.out.println("✅ User saved successfully with result: " + result);
             
             return ResponseEntity.ok("User registered successfully!");
@@ -75,7 +75,7 @@ public class UserController {
             if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
                 String token = jwtService.generateToken(user.getUsername());
                 System.out.println("🔑 Generated token: " + token.substring(0, Math.min(20, token.length())) + "...");
-                return ResponseEntity.ok().body(token);
+                return ResponseEntity.ok().body("Bearer " + token);
             } else {
                 return ResponseEntity.status(401).body("Invalid credentials");
             }

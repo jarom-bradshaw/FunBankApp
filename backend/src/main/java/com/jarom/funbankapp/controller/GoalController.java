@@ -79,7 +79,7 @@ public class GoalController {
             return ResponseEntity.notFound().build();
         }
 
-        if (goal.getUserId() != user.getId()) {
+        if (!goal.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this goal.");
         }
 
@@ -102,7 +102,7 @@ public class GoalController {
             return ResponseEntity.notFound().build();
         }
 
-        if (existingGoal.getUserId() != user.getId()) {
+        if (!existingGoal.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this goal.");
         }
 
@@ -130,7 +130,7 @@ public class GoalController {
             return ResponseEntity.notFound().build();
         }
 
-        if (goal.getUserId() != user.getId()) {
+        if (!goal.getUserId().equals(user.getId())) {
             return ResponseEntity.status(403).body("Unauthorized: You don't own this goal.");
         }
 
