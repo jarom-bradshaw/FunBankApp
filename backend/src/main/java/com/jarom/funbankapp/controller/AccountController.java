@@ -215,7 +215,7 @@ public class AccountController {
         System.out.println("🧪 Checking if user owns accountId: " + accountId);
         return accountDAO.findByUserId(user.getId())
                 .stream()
-                .anyMatch(acc -> acc.getId() == accountId);
+                .anyMatch(acc -> acc.getId().equals(accountId));
 
     }
 

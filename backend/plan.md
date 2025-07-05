@@ -78,9 +78,9 @@ Analyze the FunBankApp backend codebase to identify potential issues, security v
 ## Implementation Priority
 
 ### Phase 1: Critical Security (Week 1)
-- [x] Externalize sensitive configuration
-- [x] Implement proper CORS configuration
-- [x] Add rate limiting
+- [ ] Externalize sensitive configuration
+- [ ] Implement proper CORS configuration
+- [ ] Add rate limiting
 - [ ] Strengthen password validation
 - [ ] Implement proper session management
 

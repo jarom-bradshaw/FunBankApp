@@ -31,11 +31,7 @@ class AccountDAOTest {
     @Test
     void testCreateAccount() {
         // Arrange: Create a dummy Account
-        Account account = new Account();
-        account.setUserId(1L);
-        account.setAccountNumber("ACC123");
-        account.setBalance(new BigDecimal("100.00"));
-        account.setAccountType("Checking");
+        Account account = new Account(null, 1L, "ACC123", new BigDecimal("100.00"), "Checking", null);
         // Simulate the update call returns 1 row affected
         when(jdbcTemplate.update(
                 anyString(),
@@ -46,7 +42,7 @@ class AccountDAOTest {
         )).thenReturn(1);
 
         // Act: Call the method under test
-        Long result = accountDAO.createAccount(account);
+        int result = accountDAO.createAccount(account);
 
         // Assert: Check that the result is as expected
         assertEquals(1, result);
@@ -63,16 +59,7 @@ class AccountDAOTest {
     void testFindByUserId() {
         // Arrange: Set up the expected userId and a dummy account list
         Long userId = 1L;
-        Account account = new Account();
-        account.setId(1L);
-        account.setUserId(userId);
-        account.setAccountNumber("ACC123");
-        account.setName("Test Account");
-        account.setColor("#FF0000");
-        account.setBalance(new BigDecimal("100.00"));
-        account.setAccountType("Checking");
-        account.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        account.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        Account account = new Account(1L, userId, "ACC123", new BigDecimal("100.00"), "Checking", new Timestamp(System.currentTimeMillis()));
         List<Account> expectedAccounts = Arrays.asList(account);
 
         // Simulate the query call returning our list
