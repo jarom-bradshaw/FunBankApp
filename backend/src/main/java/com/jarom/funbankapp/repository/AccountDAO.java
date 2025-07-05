@@ -18,14 +18,19 @@ public class AccountDAO {
     }
 
     // RowMapper for Account
-    private final RowMapper<Account> accountRowMapper = (rs, rowNum) -> new Account(
-            rs.getLong("id"),
-            rs.getLong("user_id"),
-            rs.getString("account_number"),
-            rs.getBigDecimal("balance"),
-            rs.getString("account_type"),
-            rs.getTimestamp("created_at")
-    );
+    private final RowMapper<Account> accountRowMapper = (rs, rowNum) -> {
+        Account account = new Account();
+        account.setId(rs.getLong("id"));
+        account.setUserId(rs.getLong("user_id"));
+        account.setAccountNumber(rs.getString("account_number"));
+        account.setBalance(rs.getBigDecimal("balance"));
+        account.setAccountType(rs.getString("account_type"));
+        account.setName(rs.getString("name"));
+        account.setColor(rs.getString("color"));
+        account.setCreatedAt(rs.getTimestamp("created_at"));
+        account.setUpdatedAt(rs.getTimestamp("updated_at"));
+        return account;
+    };
 
 
     // Create new account
@@ -54,6 +59,30 @@ public class AccountDAO {
     public void updateBalance(Long accountId, BigDecimal newBalance) {
         String sql = "UPDATE accounts SET balance = ? WHERE id = ?";
         jdbcTemplate.update(sql, newBalance, accountId);
+    }
+
+    // Find account by ID
+    public Account findById(Long accountId) {
+        String sql = "SELECT * FROM accounts WHERE id = ?";
+        List<Account> accounts = jdbcTemplate.query(sql, accountRowMapper, accountId);
+        return accounts.isEmpty() ? null : accounts.get(0);
+    }
+
+    // Update account
+    public void updateAccount(Account account) {
+        String sql = "UPDATE accounts SET name = ?, color = ?, updated_at = ? WHERE id = ?";
+        jdbcTemplate.update(sql,
+                account.getName(),
+                account.getColor(),
+                account.getUpdatedAt(),
+                account.getId()
+        );
+    }
+
+    // Delete account
+    public void deleteAccount(Long accountId) {
+        String sql = "DELETE FROM accounts WHERE id = ?";
+        jdbcTemplate.update(sql, accountId);
     }
 
 }

@@ -17,6 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,8 +62,8 @@ public class GoalControllerTest {
         testGoal.setTargetAmount(new BigDecimal("5000.00"));
         testGoal.setCurrentAmount(new BigDecimal("1000.00"));
         testGoal.setStatus("active");
-        testGoal.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
-        testGoal.setUpdatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        testGoal.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
+        testGoal.setUpdatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         testGoals = Arrays.asList(testGoal);
     }

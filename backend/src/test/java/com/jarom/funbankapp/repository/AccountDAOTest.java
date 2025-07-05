@@ -31,7 +31,7 @@ class AccountDAOTest {
     @Test
     void testCreateAccount() {
         // Arrange: Create a dummy Account
-        Account account = new Account(null, 1L, "ACC123", new BigDecimal("100.00"), "Checking", null);
+        Account account = new Account(null, 1L, "ACC123", new BigDecimal("100.00"), "Checking", "Test Account", "blue", null, null);
         // Simulate the update call returns 1 row affected
         when(jdbcTemplate.update(
                 anyString(),
@@ -59,7 +59,7 @@ class AccountDAOTest {
     void testFindByUserId() {
         // Arrange: Set up the expected userId and a dummy account list
         Long userId = 1L;
-        Account account = new Account(1L, userId, "ACC123", new BigDecimal("100.00"), "Checking", new Timestamp(System.currentTimeMillis()));
+        Account account = new Account(1L, userId, "ACC123", new BigDecimal("100.00"), "Checking", "Test Account", "blue", new Timestamp(System.currentTimeMillis()), null);
         List<Account> expectedAccounts = Arrays.asList(account);
 
         // Simulate the query call returning our list

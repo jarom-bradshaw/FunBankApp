@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 
@@ -61,8 +61,8 @@ public class BudgetControllerTest {
         testBudget.setAmount(new BigDecimal("500.00"));
         testBudget.setCategory("Food");
         testBudget.setPeriod("monthly");
-        testBudget.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
-        testBudget.setUpdatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        testBudget.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
+        testBudget.setUpdatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         testBudgets = Arrays.asList(testBudget);
     }

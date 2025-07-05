@@ -95,6 +95,9 @@ public class GoalController {
     })
     public ResponseEntity<?> updateGoal(@PathVariable Long id, @RequestBody Goal request) {
         String username = getCurrentUsername();
+        User user = userDAO.findByUsername(username);
+        
+        Goal existingGoal = goalDAO.findById(id);
         if (existingGoal == null) {
             return ResponseEntity.notFound().build();
         }

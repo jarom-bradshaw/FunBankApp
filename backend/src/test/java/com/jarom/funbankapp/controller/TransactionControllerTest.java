@@ -17,6 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +62,7 @@ public class TransactionControllerTest {
         testTransaction.setType("expense");
         testTransaction.setAmount(new BigDecimal("100.00"));
         testTransaction.setDescription("Test transaction");
-        testTransaction.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        testTransaction.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         testTransactions = Arrays.asList(testTransaction);
     }

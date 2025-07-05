@@ -51,7 +51,7 @@ public class UserController {
             user.setPassword(hashedPassword);
             System.out.println("🔑 Password hashed successfully");
 
-            int result = userDAO.save(user);
+            Long result = userDAO.save(user);
             System.out.println("✅ User saved successfully with result: " + result);
             
             return ResponseEntity.ok("User registered successfully!");

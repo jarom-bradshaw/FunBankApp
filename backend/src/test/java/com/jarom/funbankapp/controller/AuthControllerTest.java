@@ -19,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalDateTime;
+import java.time.LocalDateTime; import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,7 +105,7 @@ public class AuthControllerTest {
         user.setEmail("test@example.com");
         user.setFirstName("John");
         user.setLastName("Doe");
-        user.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
@@ -156,7 +156,7 @@ public class AuthControllerTest {
         user.setEmail("test@example.com");
         user.setFirstName("John");
         user.setLastName("Doe");
-        user.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         when(authentication.getName()).thenReturn("test@example.com");
         when(authentication.isAuthenticated()).thenReturn(true);
@@ -280,7 +280,7 @@ public class AuthControllerTest {
         user.setEmail("test@example.com");
         user.setFirstName("John");
         user.setLastName("Doe");
-        user.setCreatedAt(LocalDateTime.of(2024, 1, 1, 12, 0, 0));
+        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
 
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);

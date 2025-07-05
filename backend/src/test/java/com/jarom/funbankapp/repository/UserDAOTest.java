@@ -48,10 +48,11 @@ class UserDAOTest {
         user.setPassword("hashed");
 
         when(jdbcTemplate.update(anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+        when(jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class)).thenReturn(1L);
 
-        int result = userDAO.save(user);
+        Long result = userDAO.save(user);
 
-        assertEquals(1, result);
+        assertEquals(1L, result);
     }
 
     @Test
