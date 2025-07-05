@@ -32,7 +32,7 @@ class AccountDAOTest {
     void testCreateAccount() {
         // Arrange: Create a dummy Account
         Account account = new Account();
-        account.setUserId(1);
+        account.setUserId(1L);
         account.setAccountNumber("ACC123");
         account.setBalance(new BigDecimal("100.00"));
         account.setAccountType("Checking");
@@ -46,7 +46,7 @@ class AccountDAOTest {
         )).thenReturn(1);
 
         // Act: Call the method under test
-        int result = accountDAO.createAccount(account);
+        Long result = accountDAO.createAccount(account);
 
         // Assert: Check that the result is as expected
         assertEquals(1, result);
@@ -62,15 +62,17 @@ class AccountDAOTest {
     @Test
     void testFindByUserId() {
         // Arrange: Set up the expected userId and a dummy account list
-        int userId = 1;
-        Account account = new Account(
-                1,                              // id
-                userId,                         // user_id
-                "ACC123",                       // account_number
-                new BigDecimal("100.00"),       // balance
-                "Checking",                     // account_type
-                new Timestamp(System.currentTimeMillis()) // created_at
-        );
+        Long userId = 1L;
+        Account account = new Account();
+        account.setId(1L);
+        account.setUserId(userId);
+        account.setAccountNumber("ACC123");
+        account.setName("Test Account");
+        account.setColor("#FF0000");
+        account.setBalance(new BigDecimal("100.00"));
+        account.setAccountType("Checking");
+        account.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        account.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         List<Account> expectedAccounts = Arrays.asList(account);
 
         // Simulate the query call returning our list
@@ -97,7 +99,7 @@ class AccountDAOTest {
     @Test
     void testGetBalance() {
         // Arrange: Set up an accountId and expected balance
-        int accountId = 1;
+        Long accountId = 1L;
         BigDecimal expectedBalance = new BigDecimal("250.50");
 
         // Simulate the queryForObject call
@@ -122,7 +124,7 @@ class AccountDAOTest {
     @Test
     void testUpdateBalance() {
         // Arrange: Set up the accountId and the new balance
-        int accountId = 1;
+        Long accountId = 1L;
         BigDecimal newBalance = new BigDecimal("300.00");
 
         // Since jdbcTemplate.update returns an int, stub it to return 1

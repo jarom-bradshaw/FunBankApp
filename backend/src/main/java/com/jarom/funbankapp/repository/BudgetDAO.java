@@ -20,8 +20,8 @@ public class BudgetDAO {
 
     private final RowMapper<Budget> budgetRowMapper = (rs, rowNum) -> {
         Budget budget = new Budget();
-        budget.setId(rs.getInt("id"));
-        budget.setUserId(rs.getInt("user_id"));
+        budget.setId(rs.getLong("id"));
+        budget.setUserId(rs.getLong("user_id"));
         budget.setName(rs.getString("name"));
         budget.setCategory(rs.getString("category"));
         budget.setAmount(rs.getBigDecimal("amount"));
@@ -48,12 +48,12 @@ public class BudgetDAO {
         );
     }
 
-    public List<Budget> findByUserId(int userId) {
+    public List<Budget> findByUserId(Long userId) {
         String sql = "SELECT * FROM budgets WHERE user_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, budgetRowMapper, userId);
     }
 
-    public Budget findById(int id) {
+    public Budget findById(Long id) {
         String sql = "SELECT * FROM budgets WHERE id = ?";
         List<Budget> budgets = jdbcTemplate.query(sql, budgetRowMapper, id);
         return budgets.isEmpty() ? null : budgets.get(0);
@@ -73,12 +73,12 @@ public class BudgetDAO {
         );
     }
 
-    public void deleteBudget(int id) {
+    public void deleteBudget(Long id) {
         String sql = "DELETE FROM budgets WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
 
-    public void updateSpent(int budgetId, BigDecimal spent) {
+    public void updateSpent(Long budgetId, BigDecimal spent) {
         String sql = "UPDATE budgets SET spent = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, spent, new Timestamp(System.currentTimeMillis()), budgetId);
     }

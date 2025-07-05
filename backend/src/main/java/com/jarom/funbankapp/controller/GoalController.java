@@ -70,7 +70,7 @@ public class GoalController {
         @ApiResponse(responseCode = "404", description = "Goal not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this goal")
     })
-    public ResponseEntity<?> getGoal(@PathVariable int id) {
+    public ResponseEntity<?> getGoal(@PathVariable Long id) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
@@ -93,7 +93,7 @@ public class GoalController {
         @ApiResponse(responseCode = "404", description = "Goal not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this goal")
     })
-    public ResponseEntity<?> updateGoal(@PathVariable int id, @RequestBody Goal request) {
+    public ResponseEntity<?> updateGoal(@PathVariable Long id, @RequestBody Goal request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
@@ -121,7 +121,7 @@ public class GoalController {
         @ApiResponse(responseCode = "404", description = "Goal not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this goal")
     })
-    public ResponseEntity<?> deleteGoal(@PathVariable int id) {
+    public ResponseEntity<?> deleteGoal(@PathVariable Long id) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 

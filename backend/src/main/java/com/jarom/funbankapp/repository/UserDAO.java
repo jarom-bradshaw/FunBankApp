@@ -14,9 +14,10 @@ public class UserDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public int save(User user) {
+    public Long save(User user) {
         String sql = "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)";
-        return jdbcTemplate.update(sql, user.getUsername(), user.getEmail(), user.getPassword());
+        jdbcTemplate.update(sql, user.getUsername(), user.getEmail(), user.getPassword());
+        return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
     }
 
     public boolean existsByUsername(String username) {
@@ -25,10 +26,21 @@ public class UserDAO {
         return count != null && count > 0;
     }
 
+    public boolean existsByEmail(String email) {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email);
+        return count != null && count > 0;
+    }
+
     @SuppressWarnings("unused") // Will be used in /login
     public User findByUsername(String username) {
         String sql = "SELECT id, username, email, password_hash as password FROM users WHERE username = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), username);
+    }
+
+    public User findByEmail(String email) {
+        String sql = "SELECT id, username, email, password_hash as password FROM users WHERE email = ?";
+        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(User.class), email);
     }
 
     public void updateUser(User user) {

@@ -22,8 +22,8 @@ public class TransactionDAO {
 
     private final RowMapper<Transaction> transactionRowMapper = (rs, rowNum) -> {
         Transaction transaction = new Transaction();
-        transaction.setId(rs.getInt("id"));
-        transaction.setAccountId(rs.getInt("account_id"));
+        transaction.setId(rs.getLong("id"));
+        transaction.setAccountId(rs.getLong("account_id"));
         transaction.setType(rs.getString("type"));
         transaction.setAmount(rs.getBigDecimal("amount"));
         transaction.setDescription(rs.getString("description"));
@@ -32,19 +32,19 @@ public class TransactionDAO {
     };
 
     // Create a new transaction record
-    public int logTransaction(int accountId, String type, BigDecimal amount, String description) {
+    public int logTransaction(Long accountId, String type, BigDecimal amount, String description) {
         String sql = "INSERT INTO transactions (account_id, type, amount, description) VALUES (?, ?, ?, ?)";
         return jdbcTemplate.update(sql, accountId, type, amount, description);
     }
 
     // Get all transactions for an account
-    public List<Transaction> findByAccountId(int accountId) {
+    public List<Transaction> findByAccountId(Long accountId) {
         String sql = "SELECT * FROM transactions WHERE account_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, transactionRowMapper, accountId);
     }
 
     // Get recent transactions for a user (across all their accounts)
-    public List<Transaction> getRecentTransactions(int userId, int limit) {
+    public List<Transaction> getRecentTransactions(Long userId, int limit) {
         String sql = "SELECT t.* FROM transactions t " +
                     "JOIN accounts a ON t.account_id = a.id " +
                     "WHERE a.user_id = ? " +
@@ -54,7 +54,7 @@ public class TransactionDAO {
     }
 
     // Get spending by category for a user (across all their accounts)
-    public Map<String, BigDecimal> getSpendingByCategory(int userId, int days) {
+    public Map<String, BigDecimal> getSpendingByCategory(Long userId, int days) {
         String sql = "SELECT t.description as category, SUM(t.amount) as total " +
                     "FROM transactions t " +
                     "JOIN accounts a ON t.account_id = a.id " +

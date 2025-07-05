@@ -69,7 +69,7 @@ public class AccountControllerTest {
     private FinancialAnalysisService financialAnalysisService;
 
     // Helper method to set up a dummy user.
-    private User createDummyUser(String username, int id) {
+    private User createDummyUser(String username, Long id) {
         User user = new User();
         user.setId(id);
         user.setUsername(username);
@@ -80,14 +80,14 @@ public class AccountControllerTest {
     @WithMockUser(username = "testuser")
     public void testGetUserAccounts() throws Exception {
         // Arrange
-        User dummyUser = createDummyUser("testuser", 1);
+        User dummyUser = createDummyUser("testuser", 1L);
         when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
 
         Account account = new Account();
-        account.setId(10);
-        account.setUserId(1);
+        account.setId(10L);
+        account.setUserId(1L);
         List<Account> accounts = Collections.singletonList(account);
-        when(accountDAO.findByUserId(1)).thenReturn(accounts);
+        when(accountDAO.findByUserId(1L)).thenReturn(accounts);
 
         // Act & Assert
         mockMvc.perform(get("/api/accounts"))
@@ -166,14 +166,14 @@ public class AccountControllerTest {
     @WithMockUser(username = "testuser")
     public void testDeposit_Unauthorized() throws Exception {
         // Arrange
-        User dummyUser = createDummyUser("testuser", 1);
+        User dummyUser = createDummyUser("testuser", 1L);
         when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
 
         // Simulate user owns no accounts.
-        when(accountDAO.findByUserId(1)).thenReturn(Collections.emptyList());
+        when(accountDAO.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         DepositRequest depositRequest = new DepositRequest();
-        depositRequest.setAccountId(20);
+        depositRequest.setAccountId(20L);
         depositRequest.setAmount(BigDecimal.valueOf(50));
         depositRequest.setDescription("Deposit");
 
@@ -218,17 +218,17 @@ public class AccountControllerTest {
     @WithMockUser(username = "testuser")
     public void testWithdraw_InsufficientFunds() throws Exception {
         // Arrange
-        User dummyUser = createDummyUser("testuser", 1);
+        User dummyUser = createDummyUser("testuser", 1L);
         when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
 
         Account account = new Account();
-        account.setId(10);
-        account.setUserId(1);
-        when(accountDAO.findByUserId(1)).thenReturn(Collections.singletonList(account));
-        when(accountDAO.getBalance(10)).thenReturn(BigDecimal.valueOf(50));
+        account.setId(10L);
+        account.setUserId(1L);
+        when(accountDAO.findByUserId(1L)).thenReturn(Collections.singletonList(account));
+        when(accountDAO.getBalance(10L)).thenReturn(BigDecimal.valueOf(50));
 
         WithdrawRequest withdrawRequest = new WithdrawRequest();
-        withdrawRequest.setAccountId(10);
+        withdrawRequest.setAccountId(10L);
         withdrawRequest.setAmount(BigDecimal.valueOf(100));
 
         // Act & Assert: Expect a 400 Bad Request response

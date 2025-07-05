@@ -11,8 +11,8 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Budget {
-    private int id;
-    private int userId;
+    private Long id;
+    private Long userId;
     private String name;
     private String category;
     private BigDecimal amount;

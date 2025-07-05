@@ -68,7 +68,7 @@ public class BudgetController {
         @ApiResponse(responseCode = "404", description = "Budget not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
     })
-    public ResponseEntity<?> getBudget(@PathVariable int id) {
+    public ResponseEntity<?> getBudget(@PathVariable Long id) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
@@ -91,7 +91,7 @@ public class BudgetController {
         @ApiResponse(responseCode = "404", description = "Budget not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
     })
-    public ResponseEntity<?> updateBudget(@PathVariable int id, @RequestBody Budget request) {
+    public ResponseEntity<?> updateBudget(@PathVariable Long id, @RequestBody Budget request) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 
@@ -119,7 +119,7 @@ public class BudgetController {
         @ApiResponse(responseCode = "404", description = "Budget not found"),
         @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
     })
-    public ResponseEntity<?> deleteBudget(@PathVariable int id) {
+    public ResponseEntity<?> deleteBudget(@PathVariable Long id) {
         String username = getCurrentUsername();
         User user = userDAO.findByUsername(username);
 

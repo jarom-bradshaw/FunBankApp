@@ -1,16 +1,16 @@
-package com.jarom.funbankapp.model;
+package com.jarom.funbankapp.dto;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
-public class User {
+public class UserDTO {
     private Long id;
     private String username;
     private String email;
     private String password;
     private String firstName;
     private String lastName;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // Getters
     public Long getId() { return id; }
@@ -19,8 +19,8 @@ public class User {
     public String getPassword() { return password; }
     public String getFirstName() { return firstName; }
     public String getLastName() { return lastName; }
-    public Timestamp getCreatedAt() { return createdAt; }
-    public Timestamp getUpdatedAt() { return updatedAt; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     // Setters
     public void setId(Long id) { this.id = id; }
@@ -29,6 +29,6 @@ public class User {
     public void setPassword(String password) { this.password = password; }
     public void setFirstName(String firstName) { this.firstName = firstName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
-}
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+} 
