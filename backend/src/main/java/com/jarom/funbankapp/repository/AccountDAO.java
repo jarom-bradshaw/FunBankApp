@@ -19,8 +19,8 @@ public class AccountDAO {
 
     // RowMapper for Account
     private final RowMapper<Account> accountRowMapper = (rs, rowNum) -> new Account(
-            rs.getInt("id"),
-            rs.getInt("user_id"),
+            rs.getLong("id"),
+            rs.getLong("user_id"),
             rs.getString("account_number"),
             rs.getBigDecimal("balance"),
             rs.getString("account_type"),
@@ -40,18 +40,18 @@ public class AccountDAO {
     }
 
     // Get all accounts for a user
-    public List<Account> findByUserId(int userId) {
+    public List<Account> findByUserId(Long userId) {
         String sql = "SELECT * FROM accounts WHERE user_id = ?";
         return jdbcTemplate.query(sql, accountRowMapper, userId);
     }
 
     // Get account balance by account ID
-    public BigDecimal getBalance(int accountId) {
+    public BigDecimal getBalance(Long accountId) {
         String sql = "SELECT balance FROM accounts WHERE id = ?";
         return jdbcTemplate.queryForObject(sql, BigDecimal.class, accountId);
     }
 
-    public void updateBalance(int accountId, BigDecimal newBalance) {
+    public void updateBalance(Long accountId, BigDecimal newBalance) {
         String sql = "UPDATE accounts SET balance = ? WHERE id = ?";
         jdbcTemplate.update(sql, newBalance, accountId);
     }

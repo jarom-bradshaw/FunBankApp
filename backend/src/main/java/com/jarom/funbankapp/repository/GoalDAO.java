@@ -20,8 +20,8 @@ public class GoalDAO {
 
     private final RowMapper<Goal> goalRowMapper = (rs, rowNum) -> {
         Goal goal = new Goal();
-        goal.setId(rs.getInt("id"));
-        goal.setUserId(rs.getInt("user_id"));
+        goal.setId(rs.getLong("id"));
+        goal.setUserId(rs.getLong("user_id"));
         goal.setName(rs.getString("name"));
         goal.setTargetAmount(rs.getBigDecimal("target_amount"));
         goal.setCurrentAmount(rs.getBigDecimal("current_amount"));
@@ -48,12 +48,12 @@ public class GoalDAO {
         );
     }
 
-    public List<Goal> findByUserId(int userId) {
+    public List<Goal> findByUserId(Long userId) {
         String sql = "SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, goalRowMapper, userId);
     }
 
-    public Goal findById(int id) {
+    public Goal findById(Long id) {
         String sql = "SELECT * FROM goals WHERE id = ?";
         List<Goal> goals = jdbcTemplate.query(sql, goalRowMapper, id);
         return goals.isEmpty() ? null : goals.get(0);
@@ -73,12 +73,12 @@ public class GoalDAO {
         );
     }
 
-    public void deleteGoal(int id) {
+    public void deleteGoal(Long id) {
         String sql = "DELETE FROM goals WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
 
-    public void updateProgress(int goalId, BigDecimal currentAmount) {
+    public void updateProgress(Long goalId, BigDecimal currentAmount) {
         String sql = "UPDATE goals SET current_amount = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, currentAmount, new Timestamp(System.currentTimeMillis()), goalId);
     }

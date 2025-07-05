@@ -211,11 +211,11 @@ public class AccountController {
     }
 
     // Reusable method to verify account ownership
-    private boolean userOwnsAccount(User user, int accountId) {
+    private boolean userOwnsAccount(User user, Long accountId) {
         System.out.println("🧪 Checking if user owns accountId: " + accountId);
         return accountDAO.findByUserId(user.getId())
                 .stream()
-                .anyMatch(acc -> acc.getId() == accountId);
+                .anyMatch(acc -> acc.getId().equals(accountId));
 
     }
 

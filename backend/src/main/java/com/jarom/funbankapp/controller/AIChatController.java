@@ -93,7 +93,7 @@ public class AIChatController {
     }
 
     // Placeholder methods for AI functionality
-    private String generateAIResponse(String message, int userId) {
+    private String generateAIResponse(String message, Long userId) {
         // This would integrate with OpenAI API in a real implementation
         String lowerMessage = message.toLowerCase();
         
@@ -110,7 +110,7 @@ public class AIChatController {
         }
     }
 
-    private Map<String, String> generateRecommendations(int userId) {
+    private Map<String, String> generateRecommendations(Long userId) {
         Map<String, String> recommendations = new HashMap<>();
         recommendations.put("budget", "Consider creating a monthly budget to track your spending");
         recommendations.put("savings", "Aim to save 20% of your income for future goals");
@@ -119,7 +119,7 @@ public class AIChatController {
         return recommendations;
     }
 
-    private Map<String, Object> analyzeSpending(int userId) {
+    private Map<String, Object> analyzeSpending(Long userId) {
         Map<String, Object> analysis = new HashMap<>();
         analysis.put("total_spent", 0.0);
         analysis.put("top_categories", new String[]{"Food", "Transportation", "Entertainment"});
@@ -128,7 +128,7 @@ public class AIChatController {
         return analysis;
     }
 
-    private Map<String, Object> detectAnomalies(int userId) {
+    private Map<String, Object> detectAnomalies(Long userId) {
         Map<String, Object> anomalies = new HashMap<>();
         anomalies.put("detected", false);
         anomalies.put("message", "No unusual spending patterns detected");
