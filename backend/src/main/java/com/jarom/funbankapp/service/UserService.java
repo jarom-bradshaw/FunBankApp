@@ -1,66 +1,39 @@
 package com.jarom.funbankapp.service;
 
-import com.jarom.funbankapp.dto.UserDTO;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.UserRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.regex.Pattern;
 
 @Service
 public class UserService {
 
-    private final UserDAO userDAO;
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
-    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z\\s'-]+$");
+    private final UserRepository userRepository;
 
-    public UserService(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
-    public UserDTO sanitizeUserDTO(UserDTO userDTO) {
-        if (userDTO.getEmail() != null) {
-            userDTO.setEmail(userDTO.getEmail().trim().toLowerCase());
-        }
-        if (userDTO.getFirstName() != null) {
-            userDTO.setFirstName(userDTO.getFirstName().trim());
-        }
-        if (userDTO.getLastName() != null) {
-            userDTO.setLastName(userDTO.getLastName().trim());
-        }
-        return userDTO;
+    public Long save(User user) {
+        return userRepository.save(user);
     }
 
-    public boolean isValidEmail(String email) {
-        return email != null && EMAIL_PATTERN.matcher(email).matches();
+    public java.util.Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
-    public boolean isValidName(String name) {
-        return name != null && NAME_PATTERN.matcher(name).matches() && name.length() <= 100;
+    public java.util.Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
-    public boolean isValidPassword(String password) {
-        return password != null && password.length() >= 6;
+    public void updateUser(User user) {
+        userRepository.updateUser(user);
     }
 
-    public User convertToUser(UserDTO userDTO) {
-        User user = new User();
-        user.setUsername(userDTO.getUsername());
-        user.setEmail(userDTO.getEmail());
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        return user;
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 
-    public UserDTO convertToDTO(User user) {
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-        dto.setFirstName(user.getFirstName());
-        dto.setLastName(user.getLastName());
-        dto.setCreatedAt(user.getCreatedAt() != null ? user.getCreatedAt().toLocalDateTime() : null);
-        dto.setUpdatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().toLocalDateTime() : null);
-        return dto;
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 } 

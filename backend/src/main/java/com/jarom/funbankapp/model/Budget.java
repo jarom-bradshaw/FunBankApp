@@ -1,16 +1,38 @@
 package com.jarom.funbankapp.model;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Budget {
     private Long id;
+    
+    @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
     private Long userId;
+    
+    @NotBlank(message = "Budget name is required")
+    @Size(min = 1, max = 100, message = "Budget name must be between 1 and 100 characters")
     private String name;
+    
+    @NotBlank(message = "Category is required")
+    @Size(max = 50, message = "Category cannot exceed 50 characters")
     private String category;
+    
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", inclusive = true, message = "Amount must be greater than 0")
+    @Digits(integer = 15, fraction = 2, message = "Amount must have at most 15 digits and 2 decimal places")
     private BigDecimal amount;
+    
+    @NotBlank(message = "Period is required")
+    @Pattern(regexp = "^(monthly|yearly)$", message = "Period must be either 'monthly' or 'yearly'")
     private String period; // monthly, yearly
+    
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
+    
+    private BigDecimal spent;
+    
     private Timestamp startDate;
     private Timestamp endDate;
     private Timestamp createdAt;
@@ -41,6 +63,8 @@ public class Budget {
     public BigDecimal getAmount() { return amount; }
     public String getPeriod() { return period; }
     public String getDescription() { return description; }
+    public BigDecimal getSpent() { return spent; }
+    public void setSpent(BigDecimal spent) { this.spent = spent; }
     public Timestamp getStartDate() { return startDate; }
     public Timestamp getEndDate() { return endDate; }
     public Timestamp getCreatedAt() { return createdAt; }

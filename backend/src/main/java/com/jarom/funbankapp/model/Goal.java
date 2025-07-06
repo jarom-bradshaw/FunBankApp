@@ -1,18 +1,43 @@
 package com.jarom.funbankapp.model;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Goal {
     private Long id;
+    
+    @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
     private Long userId;
+    
+    @NotBlank(message = "Goal name is required")
+    @Size(min = 1, max = 100, message = "Goal name must be between 1 and 100 characters")
     private String name;
+    
+    @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
+    
+    @NotNull(message = "Target amount is required")
+    @DecimalMin(value = "0.01", inclusive = true, message = "Target amount must be greater than 0")
+    @Digits(integer = 15, fraction = 2, message = "Target amount must have at most 15 digits and 2 decimal places")
     private BigDecimal targetAmount;
+    
+    @NotNull(message = "Current amount is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Current amount cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Current amount must have at most 15 digits and 2 decimal places")
     private BigDecimal currentAmount;
+    
     private Timestamp deadline;
+    
+    @NotBlank(message = "Goal type is required")
+    @Pattern(regexp = "^(short-term|long-term)$", message = "Goal type must be either 'short-term' or 'long-term'")
     private String type; // short-term, long-term
+    
+    @NotBlank(message = "Goal status is required")
+    @Pattern(regexp = "^(active|completed|cancelled)$", message = "Goal status must be one of: active, completed, cancelled")
     private String status; // active, completed, cancelled
+    
     private Timestamp createdAt;
     private Timestamp updatedAt;
     

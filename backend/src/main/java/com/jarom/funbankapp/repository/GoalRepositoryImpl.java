@@ -8,13 +8,14 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public class GoalDAO {
+public class GoalRepositoryImpl implements GoalRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public GoalDAO(JdbcTemplate jdbcTemplate) {
+    public GoalRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -23,6 +24,7 @@ public class GoalDAO {
         goal.setId(rs.getLong("id"));
         goal.setUserId(rs.getLong("user_id"));
         goal.setName(rs.getString("name"));
+        goal.setDescription(rs.getString("description"));
         goal.setTargetAmount(rs.getBigDecimal("target_amount"));
         goal.setCurrentAmount(rs.getBigDecimal("current_amount"));
         goal.setDeadline(rs.getTimestamp("deadline"));
@@ -33,11 +35,13 @@ public class GoalDAO {
         return goal;
     };
 
+    @Override
     public void createGoal(Goal goal) {
-        String sql = "INSERT INTO goals (user_id, name, target_amount, current_amount, deadline, type, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO goals (user_id, name, description, target_amount, current_amount, deadline, type, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
                 goal.getUserId(),
                 goal.getName(),
+                goal.getDescription(),
                 goal.getTargetAmount(),
                 goal.getCurrentAmount(),
                 goal.getDeadline(),
@@ -48,21 +52,25 @@ public class GoalDAO {
         );
     }
 
+    @Override
+    public Optional<Goal> findById(Long id) {
+        String sql = "SELECT * FROM goals WHERE id = ?";
+        List<Goal> results = jdbcTemplate.query(sql, goalRowMapper, id);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
+
+    @Override
     public List<Goal> findByUserId(Long userId) {
         String sql = "SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, goalRowMapper, userId);
     }
 
-    public Goal findById(Long id) {
-        String sql = "SELECT * FROM goals WHERE id = ?";
-        List<Goal> goals = jdbcTemplate.query(sql, goalRowMapper, id);
-        return goals.isEmpty() ? null : goals.get(0);
-    }
-
+    @Override
     public void updateGoal(Goal goal) {
-        String sql = "UPDATE goals SET name = ?, target_amount = ?, current_amount = ?, deadline = ?, type = ?, status = ?, updated_at = ? WHERE id = ?";
+        String sql = "UPDATE goals SET name = ?, description = ?, target_amount = ?, current_amount = ?, deadline = ?, type = ?, status = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql,
                 goal.getName(),
+                goal.getDescription(),
                 goal.getTargetAmount(),
                 goal.getCurrentAmount(),
                 goal.getDeadline(),
@@ -73,12 +81,14 @@ public class GoalDAO {
         );
     }
 
+    @Override
     public void deleteGoal(Long id) {
         String sql = "DELETE FROM goals WHERE id = ?";
         jdbcTemplate.update(sql, id);
     }
 
-    public void updateProgress(Long goalId, BigDecimal currentAmount) {
+    @Override
+    public void updateCurrentAmount(Long goalId, BigDecimal currentAmount) {
         String sql = "UPDATE goals SET current_amount = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, currentAmount, new Timestamp(System.currentTimeMillis()), goalId);
     }

@@ -1,14 +1,28 @@
 package com.jarom.funbankapp.model;
 
+import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public class Transaction {
     private Long id;
+    
+    @NotNull(message = "Account ID is required")
+    @Positive(message = "Account ID must be positive")
     private Long accountId;
+    
+    @NotBlank(message = "Transaction type is required")
+    @Pattern(regexp = "^(deposit|withdraw|transfer)$", message = "Transaction type must be one of: deposit, withdraw, transfer")
     private String type;         // "deposit", "withdraw", "transfer"
+    
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", inclusive = true, message = "Amount must be greater than 0")
+    @Digits(integer = 15, fraction = 2, message = "Amount must have at most 15 digits and 2 decimal places")
     private BigDecimal amount;
+    
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
+    
     private Timestamp createdAt;
     
     // Constructors

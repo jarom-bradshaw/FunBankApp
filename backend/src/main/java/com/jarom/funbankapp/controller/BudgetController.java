@@ -1,176 +1,134 @@
 package com.jarom.funbankapp.controller;
 
+import com.jarom.funbankapp.dto.ApiResponse;
 import com.jarom.funbankapp.model.Budget;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.BudgetDAO;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.BudgetRepository;
+import com.jarom.funbankapp.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.List;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @RestController
 @RequestMapping("/api/budgets")
-@io.swagger.v3.oas.annotations.tags.Tag(name = "Budgets", description = "Budget management operations")
 public class BudgetController {
 
-    private final BudgetDAO budgetDAO;
-    private final UserDAO userDAO;
+    private final BudgetRepository budgetRepository;
+    private final UserRepository userRepository;
 
-    public BudgetController(BudgetDAO budgetDAO, UserDAO userDAO) {
-        this.budgetDAO = budgetDAO;
-        this.userDAO = userDAO;
+    public BudgetController(BudgetRepository budgetRepository, UserRepository userRepository) {
+        this.budgetRepository = budgetRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
-    @Operation(summary = "Create a new budget", description = "Creates a new budget for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget created successfully"),
-        @ApiResponse(responseCode = "400", description = "Invalid budget data")
-    })
-    public ResponseEntity<?> createBudget(@RequestBody Budget request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<Budget>> createBudget(@RequestBody Budget request, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        request.setUserId(user.getId());
-        request.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        request.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+            request.setUserId(user.getId());
+            budgetRepository.createBudget(request);
 
-        budgetDAO.createBudget(request);
-        return ResponseEntity.ok("Budget created successfully!");
+            return ResponseEntity.ok(ApiResponse.success("Budget created successfully", request));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to create budget: " + e.getMessage()));
+        }
     }
 
     @GetMapping
-    @Operation(summary = "Get user budgets", description = "Retrieves all budgets for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budgets retrieved successfully")
-    })
-    public ResponseEntity<List<Budget>> getUserBudgets() {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<List<Budget>>> getBudgets(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Budget> budgets = budgetDAO.findByUserId(user.getId());
-        return ResponseEntity.ok(budgets);
+            List<Budget> budgets = budgetRepository.findByUserId(user.getId());
+            return ResponseEntity.ok(ApiResponse.success("Budgets retrieved successfully", budgets));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve budgets: " + e.getMessage()));
+        }
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get budget by ID", description = "Retrieves a specific budget by ID.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
-    })
-    public ResponseEntity<?> getBudget(@PathVariable Long id) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<Budget>> getBudget(@PathVariable Long id, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Budget budget = budgetDAO.findById(id);
-        if (budget == null) {
-            return ResponseEntity.notFound().build();
+            Budget budget = budgetRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Budget not found"));
+
+            if (!budget.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
+            }
+
+            return ResponseEntity.ok(ApiResponse.success("Budget retrieved successfully", budget));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve budget: " + e.getMessage()));
         }
-
-        if (!budget.getUserId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
-        }
-
-        return ResponseEntity.ok(budget);
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update budget", description = "Updates an existing budget.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget updated successfully"),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
-    })
-    public ResponseEntity<?> updateBudget(@PathVariable Long id, @RequestBody Budget request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<Budget>> updateBudget(@PathVariable Long id, @RequestBody Budget request, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Budget existingBudget = budgetDAO.findById(id);
-        if (existingBudget == null) {
-            return ResponseEntity.notFound().build();
+            Budget existingBudget = budgetRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Budget not found"));
+
+            if (!existingBudget.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
+            }
+
+            request.setId(id);
+            request.setUserId(user.getId());
+            budgetRepository.updateBudget(request);
+
+            return ResponseEntity.ok(ApiResponse.success("Budget updated successfully", request));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to update budget: " + e.getMessage()));
         }
-
-        if (!existingBudget.getUserId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
-        }
-
-        request.setId(id);
-        request.setUserId(user.getId());
-        request.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
-
-        budgetDAO.updateBudget(request);
-        return ResponseEntity.ok("Budget updated successfully!");
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete budget", description = "Deletes a budget.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Budget not found"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this budget")
-    })
-    public ResponseEntity<?> deleteBudget(@PathVariable Long id) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<String>> deleteBudget(@PathVariable Long id, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Budget budget = budgetDAO.findById(id);
-        if (budget == null) {
-            return ResponseEntity.notFound().build();
+            Budget budget = budgetRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Budget not found"));
+
+            if (!budget.getUserId().equals(user.getId())) {
+                return ResponseEntity.status(403).body(ApiResponse.error("Access denied"));
+            }
+
+            budgetRepository.deleteBudget(id);
+            return ResponseEntity.ok(ApiResponse.success("Budget deleted successfully", "Budget deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to delete budget: " + e.getMessage()));
         }
-
-        if (!budget.getUserId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Unauthorized: You don't own this budget.");
-        }
-
-        budgetDAO.deleteBudget(id);
-        return ResponseEntity.ok("Budget deleted successfully!");
     }
 
     @GetMapping("/summary")
-    @Operation(summary = "Get budget summary", description = "Retrieves a summary of all budgets for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Budget summary retrieved successfully")
-    })
-    public ResponseEntity<?> getBudgetSummary() {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<List<Budget>>> getBudgetSummary(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<Budget> budgets = budgetDAO.findByUserId(user.getId());
-        
-        BigDecimal totalBudgeted = budgets.stream()
-                .map(Budget::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        return ResponseEntity.ok(new BudgetSummary(totalBudgeted, budgets));
-    }
-
-    private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
-    }
-
-    // Inner class for budget summary response
-    public static class BudgetSummary {
-        private BigDecimal totalBudgeted;
-        private List<Budget> budgets;
-
-        public BudgetSummary(BigDecimal totalBudgeted, List<Budget> budgets) {
-            this.totalBudgeted = totalBudgeted;
-            this.budgets = budgets;
+            List<Budget> budgets = budgetRepository.findByUserId(user.getId());
+            return ResponseEntity.ok(ApiResponse.success("Budget summary retrieved successfully", budgets));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve budget summary: " + e.getMessage()));
         }
-
-        // Getters
-        public BigDecimal getTotalBudgeted() { return totalBudgeted; }
-        public List<Budget> getBudgets() { return budgets; }
     }
 } 

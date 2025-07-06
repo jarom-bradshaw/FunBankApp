@@ -11,9 +11,9 @@ import com.jarom.funbankapp.dto.TransferRequest;
 import com.jarom.funbankapp.dto.WithdrawRequest;
 import com.jarom.funbankapp.model.Account;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.AccountDAO;
-import com.jarom.funbankapp.repository.TransactionDAO;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.AccountRepository;
+import com.jarom.funbankapp.repository.TransactionRepository;
+import com.jarom.funbankapp.repository.UserRepository;
 import com.jarom.funbankapp.security.JwtAuthFilter;
 import com.jarom.funbankapp.service.FinancialAnalysisService;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -57,13 +58,13 @@ public class AccountControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private AccountDAO accountDAO;
+    private AccountRepository accountRepository;
 
     @MockBean
-    private UserDAO userDAO;
+    private UserRepository userRepository;
 
     @MockBean
-    private TransactionDAO transactionDAO;
+    private TransactionRepository transactionRepository;
 
     @MockBean
     private FinancialAnalysisService financialAnalysisService;
@@ -81,13 +82,13 @@ public class AccountControllerTest {
     public void testGetUserAccounts() throws Exception {
         // Arrange
         User dummyUser = createDummyUser("testuser", 1L);
-        when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(dummyUser));
 
         Account account = new Account();
         account.setId(10L);
         account.setUserId(1L);
         List<Account> accounts = Collections.singletonList(account);
-        when(accountDAO.findByUserId(1L)).thenReturn(accounts);
+        when(accountRepository.findByUserId(1L)).thenReturn(accounts);
 
         // Act & Assert
         mockMvc.perform(get("/api/accounts"))
@@ -167,10 +168,10 @@ public class AccountControllerTest {
     public void testDeposit_Unauthorized() throws Exception {
         // Arrange
         User dummyUser = createDummyUser("testuser", 1L);
-        when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(dummyUser));
 
         // Simulate user owns no accounts.
-        when(accountDAO.findByUserId(1L)).thenReturn(Collections.emptyList());
+        when(accountRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         DepositRequest depositRequest = new DepositRequest();
         depositRequest.setAccountId(20L);
@@ -219,13 +220,13 @@ public class AccountControllerTest {
     public void testWithdraw_InsufficientFunds() throws Exception {
         // Arrange
         User dummyUser = createDummyUser("testuser", 1L);
-        when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(dummyUser));
 
         Account account = new Account();
         account.setId(10L);
         account.setUserId(1L);
-        when(accountDAO.findByUserId(1L)).thenReturn(Collections.singletonList(account));
-        when(accountDAO.getBalance(10L)).thenReturn(BigDecimal.valueOf(50));
+        when(accountRepository.findByUserId(1L)).thenReturn(Collections.singletonList(account));
+        when(accountRepository.getBalance(10L)).thenReturn(BigDecimal.valueOf(50));
 
         WithdrawRequest withdrawRequest = new WithdrawRequest();
         withdrawRequest.setAccountId(10L);
@@ -281,20 +282,20 @@ public class AccountControllerTest {
     public void testTransfer_InsufficientFunds() throws Exception {
         // Arrange
         User dummyUser = createDummyUser("testuser", 1L);
-        when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(dummyUser));
 
-        Account sourceAccount = new Account();
-        sourceAccount.setId(10L);
-        sourceAccount.setUserId(1L);
-        when(accountDAO.findByUserId(1L)).thenReturn(Collections.singletonList(sourceAccount));
-        when(accountDAO.getBalance(10L)).thenReturn(BigDecimal.valueOf(30));
+        Account account = new Account();
+        account.setId(10L);
+        account.setUserId(1L);
+        when(accountRepository.findByUserId(1L)).thenReturn(Collections.singletonList(account));
+        when(accountRepository.getBalance(10L)).thenReturn(BigDecimal.valueOf(50));
 
         TransferRequest transferRequest = new TransferRequest();
         transferRequest.setFromAccountId(10L);
         transferRequest.setToAccountId(20L);
-        transferRequest.setAmount(BigDecimal.valueOf(50));
+        transferRequest.setAmount(BigDecimal.valueOf(100));
 
-        // Act & Assert: Expect a 400 Bad Request response with "Insufficient funds."
+        // Act & Assert: Expect a 400 Bad Request response
         mockMvc.perform(post("/api/accounts/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(transferRequest)))
@@ -307,22 +308,22 @@ public class AccountControllerTest {
     public void testTransfer_UnauthorizedSourceAccount() throws Exception {
         // Arrange
         User dummyUser = createDummyUser("testuser", 1L);
-        when(userDAO.findByUsername("testuser")).thenReturn(dummyUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(dummyUser));
 
-        // Simulate that the user does not own the source account.
-        when(accountDAO.findByUserId(1L)).thenReturn(Collections.emptyList());
+        // Simulate user owns no accounts.
+        when(accountRepository.findByUserId(1L)).thenReturn(Collections.emptyList());
 
         TransferRequest transferRequest = new TransferRequest();
-        transferRequest.setFromAccountId(10L);
-        transferRequest.setToAccountId(20L);
+        transferRequest.setFromAccountId(20L);
+        transferRequest.setToAccountId(30L);
         transferRequest.setAmount(BigDecimal.valueOf(50));
 
-        // Act & Assert: Expect 403 Forbidden with the appropriate message.
+        // Act & Assert: Expect a 403 Forbidden response.
         mockMvc.perform(post("/api/accounts/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(transferRequest)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own the source account."));
+                .andExpect(content().string("Unauthorized: You don't own this account."));
     }
 
     @Test

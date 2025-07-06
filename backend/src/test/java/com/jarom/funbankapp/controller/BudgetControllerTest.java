@@ -3,8 +3,8 @@ package com.jarom.funbankapp.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jarom.funbankapp.model.Budget;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.BudgetDAO;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.BudgetRepository;
+import com.jarom.funbankapp.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime; import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -34,10 +35,10 @@ public class BudgetControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private BudgetDAO budgetDAO;
+    private BudgetRepository budgetRepository;
 
     @MockBean
-    private UserDAO userDAO;
+    private UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -70,7 +71,7 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void createBudget_ShouldCreateSuccessfully() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
         Budget request = new Budget();
         request.setName("New Budget");
@@ -82,14 +83,14 @@ public class BudgetControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Budget created successfully!"));
+                .andExpect(jsonPath("$.message").value("Budget created successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void getUserBudgets_ShouldReturnBudgets() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findByUserId(1L)).thenReturn(testBudgets);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findByUserId(1L)).thenReturn(testBudgets);
 
         mockMvc.perform(get("/api/budgets"))
                 .andExpect(status().isOk())
@@ -101,8 +102,8 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getBudget_ShouldReturnBudget_WhenBudgetExists() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(1L)).thenReturn(testBudget);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(testBudget));
 
         mockMvc.perform(get("/api/budgets/1"))
                 .andExpect(status().isOk())
@@ -113,8 +114,8 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getBudget_ShouldReturnNotFound_WhenBudgetDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/budgets/999"))
                 .andExpect(status().isNotFound());
@@ -123,25 +124,25 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getBudget_ShouldReturnForbidden_WhenUserDoesNotOwnBudget() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Budget otherUserBudget = new Budget();
         otherUserBudget.setId(1L);
         otherUserBudget.setUserId(999L); // Different user
         otherUserBudget.setName("Other user's budget");
         
-        when(budgetDAO.findById(1L)).thenReturn(otherUserBudget);
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(otherUserBudget));
 
         mockMvc.perform(get("/api/budgets/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void updateBudget_ShouldUpdateSuccessfully_WhenUserOwnsBudget() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(1L)).thenReturn(testBudget);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(testBudget));
 
         Budget request = new Budget();
         request.setName("Updated Budget");
@@ -151,14 +152,14 @@ public class BudgetControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Budget updated successfully!"));
+                .andExpect(jsonPath("$.message").value("Budget updated successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void updateBudget_ShouldReturnNotFound_WhenBudgetDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
         Budget request = new Budget();
         request.setName("Updated Budget");
@@ -172,13 +173,13 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void updateBudget_ShouldReturnForbidden_WhenUserDoesNotOwnBudget() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Budget otherUserBudget = new Budget();
         otherUserBudget.setId(1L);
         otherUserBudget.setUserId(999L); // Different user
         
-        when(budgetDAO.findById(1L)).thenReturn(otherUserBudget);
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(otherUserBudget));
 
         Budget request = new Budget();
         request.setName("Updated Budget");
@@ -187,25 +188,25 @@ public class BudgetControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void deleteBudget_ShouldDeleteSuccessfully_WhenUserOwnsBudget() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(1L)).thenReturn(testBudget);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(testBudget));
 
         mockMvc.perform(delete("/api/budgets/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Budget deleted successfully!"));
+                .andExpect(jsonPath("$.message").value("Budget deleted successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void deleteBudget_ShouldReturnNotFound_WhenBudgetDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/budgets/999"))
                 .andExpect(status().isNotFound());
@@ -214,24 +215,24 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void deleteBudget_ShouldReturnForbidden_WhenUserDoesNotOwnBudget() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Budget otherUserBudget = new Budget();
         otherUserBudget.setId(1L);
         otherUserBudget.setUserId(999L); // Different user
         
-        when(budgetDAO.findById(1L)).thenReturn(otherUserBudget);
+        when(budgetRepository.findById(1L)).thenReturn(Optional.of(otherUserBudget));
 
         mockMvc.perform(delete("/api/budgets/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void getBudgetSummary_ShouldReturnSummary() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findByUserId(1L)).thenReturn(testBudgets);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findByUserId(1L)).thenReturn(testBudgets);
 
         mockMvc.perform(get("/api/budgets/summary"))
                 .andExpect(status().isOk())
@@ -242,8 +243,8 @@ public class BudgetControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getBudgetSummary_ShouldHandleEmptyBudgets() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(budgetDAO.findByUserId(1L)).thenReturn(Arrays.asList());
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(budgetRepository.findByUserId(1L)).thenReturn(Arrays.asList());
 
         mockMvc.perform(get("/api/budgets/summary"))
                 .andExpect(status().isOk())

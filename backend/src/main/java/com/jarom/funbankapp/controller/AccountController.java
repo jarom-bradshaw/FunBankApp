@@ -1,227 +1,219 @@
 package com.jarom.funbankapp.controller;
 
-import com.jarom.funbankapp.model.Account;
-import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.AccountDAO;
-import com.jarom.funbankapp.repository.UserDAO;
-import com.jarom.funbankapp.repository.TransactionDAO;
-import com.jarom.funbankapp.dto.DepositRequest;
-import com.jarom.funbankapp.dto.WithdrawRequest;
-import com.jarom.funbankapp.dto.TransferRequest;
-import com.jarom.funbankapp.service.FinancialAnalysisService;
+import java.math.BigDecimal;
+import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
+import com.jarom.funbankapp.dto.DepositRequest;
+import com.jarom.funbankapp.dto.TransferRequest;
+import com.jarom.funbankapp.dto.WithdrawRequest;
+import com.jarom.funbankapp.model.Account;
+import com.jarom.funbankapp.service.AccountService;
+import com.jarom.funbankapp.service.FinancialAnalysisService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/accounts")
-@io.swagger.v3.oas.annotations.tags.Tag(name = "Accounts", description = "Account management and transactions")
+@Tag(name = "Accounts", description = "Account management and transactions")
+@SecurityRequirement(name = "bearerAuth")
 public class AccountController {
 
-    private final AccountDAO accountDAO;
-    private final UserDAO userDAO;
-    private final TransactionDAO transactionDAO;
+    private final AccountService accountService;
     private final FinancialAnalysisService financialAnalysisService;
 
-    public AccountController(AccountDAO accountDAO, UserDAO userDAO, TransactionDAO transactionDAO, FinancialAnalysisService financialAnalysisService) {
-        this.accountDAO = accountDAO;
-        this.userDAO = userDAO;
-        this.transactionDAO = transactionDAO;
+    public AccountController(AccountService accountService, FinancialAnalysisService financialAnalysisService) {
+        this.accountService = accountService;
         this.financialAnalysisService = financialAnalysisService;
     }
 
     // Create a new account
     @PostMapping
-    @Operation(summary = "Create a new account", description = "Creates a new account for the authenticated user.")
+    @Operation(
+        summary = "Create a new account", 
+        description = "Creates a new account for the authenticated user. The account will be associated with the current user's ID."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Account created successfully")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Account created successfully",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid account data provided"),
+        @ApiResponse(responseCode = "401", description = "User not authenticated")
     })
-    public ResponseEntity<?> createAccount(@RequestBody Account request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
-
-        request.setAccountNumber(UUID.randomUUID().toString());
-
-        request.setUserId(user.getId());
-
-        accountDAO.createAccount(request);
-
-        return ResponseEntity.ok("Account created.");
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<String>> createAccount(
+        @Parameter(description = "Account details to create", required = true)
+        @Valid @RequestBody com.jarom.funbankapp.dto.AccountDTO request
+    ) {
+        // Business logic moved to service layer
+        accountService.createAccount(request);
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Account created successfully", null));
     }
 
     // Get all accounts for the logged-in user
     @GetMapping
-    @Operation(summary = "Get user accounts", description = "Retrieves all accounts for the authenticated user.")
+    @Operation(
+        summary = "Get user accounts", 
+        description = "Retrieves all accounts for the authenticated user. Returns a list of account objects with balances and details."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Accounts retrieved successfully")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Accounts retrieved successfully",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "401", description = "User not authenticated")
     })
-    public ResponseEntity<List<Account>> getUserAccounts() {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
-
-        List<Account> accounts = accountDAO.findByUserId(user.getId());
-        return ResponseEntity.ok(accounts);
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<List<Account>>> getUserAccounts() {
+        // Business logic moved to service layer
+        List<Account> accounts = accountService.getUserAccounts().stream()
+                .map(this::convertToModel)
+                .toList();
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Accounts retrieved successfully", accounts));
     }
 
     // Deposit endpoint
     @PostMapping("/deposit")
-    @Operation(summary = "Deposit funds", description = "Deposits funds into a user-owned account.")
+    @Operation(
+        summary = "Deposit funds", 
+        description = "Deposits funds into a user-owned account. The amount must be positive and the account must belong to the authenticated user."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Deposit successful"),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account.")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Deposit successful",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid amount or account data"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account"),
+        @ApiResponse(responseCode = "404", description = "Account not found")
     })
-    public ResponseEntity<?> deposit(@RequestBody DepositRequest request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
-
-        System.out.println("🔍 Checking account ownership");
-        System.out.println("👤 User ID: " + user.getId());
-        System.out.println("📥 Deposit accountId: " + request.getAccountId());
-
-        List<Account> owned = accountDAO.findByUserId(user.getId());
-        owned.forEach(acc -> System.out.println("✅ User owns: " + acc.getId()));
-
-
-        if (!userOwnsAccount(user, request.getAccountId())) {
-            System.out.println("👤 Logged in as: " + username);
-            System.out.println("🔍 Verifying ownership of accountId: " + request.getAccountId());
-            List<Account> accounts = accountDAO.findByUserId(user.getId());
-            accounts.forEach(acc -> System.out.println("✅ User owns accountId: " + acc.getId()));
-
-            return ResponseEntity.status(403).body("Unauthorized: You don't own this account.");
-        }
-
-        BigDecimal currentBalance = accountDAO.getBalance(request.getAccountId());
-        BigDecimal newBalance = currentBalance.add(request.getAmount());
-
-        accountDAO.updateBalance(request.getAccountId(), newBalance);
-
-        transactionDAO.logTransaction(
-                request.getAccountId(),
-                "deposit",
-                request.getAmount(),
-                request.getDescription() != null ? request.getDescription() : "Deposit"
-        );
-
-        return ResponseEntity.ok("Deposit successful. New balance: $" + newBalance);
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<String>> deposit(
+        @Parameter(description = "Deposit details including account ID and amount", required = true)
+        @RequestBody DepositRequest request
+    ) {
+        // Business logic moved to service layer
+        BigDecimal newBalance = accountService.deposit(request);
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Deposit successful. New balance: $" + newBalance, null));
     }
 
     // Withdraw endpoint
     @PostMapping("/withdraw")
-    @Operation(summary = "Withdraw funds", description = "Withdraws funds from a user-owned account.")
+    @Operation(
+        summary = "Withdraw funds", 
+        description = "Withdraws funds from a user-owned account. The amount must be positive and not exceed the account balance."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Withdrawal successful"),
-        @ApiResponse(responseCode = "400", description = "Insufficient funds."),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account.")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Withdrawal successful",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Insufficient funds or invalid amount"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own this account"),
+        @ApiResponse(responseCode = "404", description = "Account not found")
     })
-    public ResponseEntity<?> withdraw(@RequestBody WithdrawRequest request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
-
-        if (!userOwnsAccount(user, request.getAccountId())) {
-            return ResponseEntity.status(403).body("Unauthorized: You don't own this account.");
-        }
-
-        BigDecimal currentBalance = accountDAO.getBalance(request.getAccountId());
-
-        if (request.getAmount().compareTo(currentBalance) > 0) {
-            return ResponseEntity.badRequest().body("Insufficient funds.");
-        }
-
-        BigDecimal newBalance = currentBalance.subtract(request.getAmount());
-
-        accountDAO.updateBalance(request.getAccountId(), newBalance);
-
-        transactionDAO.logTransaction(
-                request.getAccountId(),
-                "withdraw",
-                request.getAmount(),
-                request.getDescription() != null ? request.getDescription() : "Withdrawal"
-        );
-
-        return ResponseEntity.ok("Withdrawal successful. New balance: $" + newBalance);
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<String>> withdraw(
+        @Parameter(description = "Withdrawal details including account ID and amount", required = true)
+        @RequestBody WithdrawRequest request
+    ) {
+        // Business logic moved to service layer
+        BigDecimal newBalance = accountService.withdraw(request);
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Withdrawal successful. New balance: $" + newBalance, null));
     }
 
     // Transfer endpoint
     @PostMapping("/transfer")
-    @Operation(summary = "Transfer funds", description = "Transfers funds between user accounts.")
+    @Operation(
+        summary = "Transfer funds", 
+        description = "Transfers funds between user accounts. Both accounts must belong to the authenticated user."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Transfer successful"),
-        @ApiResponse(responseCode = "400", description = "Insufficient funds."),
-        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own the source account.")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Transfer successful",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Insufficient funds or invalid transfer data"),
+        @ApiResponse(responseCode = "403", description = "Unauthorized: You don't own the source account"),
+        @ApiResponse(responseCode = "404", description = "One or both accounts not found")
     })
-    public ResponseEntity<?> transfer(@RequestBody TransferRequest request) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
-
-        if (!userOwnsAccount(user, request.getFromAccountId())) {
-            return ResponseEntity.status(403).body("Unauthorized: You don't own the source account.");
-        }
-
-        BigDecimal fromBalance = accountDAO.getBalance(request.getFromAccountId());
-
-        if (request.getAmount().compareTo(fromBalance) > 0) {
-            return ResponseEntity.badRequest().body("Insufficient funds.");
-        }
-
-        BigDecimal toBalance = accountDAO.getBalance(request.getToAccountId());
-        BigDecimal newFromBalance = fromBalance.subtract(request.getAmount());
-        BigDecimal newToBalance = toBalance.add(request.getAmount());
-
-        accountDAO.updateBalance(request.getFromAccountId(), newFromBalance);
-        accountDAO.updateBalance(request.getToAccountId(), newToBalance);
-
-        transactionDAO.logTransaction(
-                request.getFromAccountId(),
-                "transfer",
-                request.getAmount(),
-                request.getDescription() != null ? request.getDescription() : "Transfer to account " + request.getToAccountId()
-        );
-
-        transactionDAO.logTransaction(
-                request.getToAccountId(),
-                "deposit",
-                request.getAmount(),
-                "Transfer from account " + request.getFromAccountId()
-        );
-
-        return ResponseEntity.ok("Transfer successful.");
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<String>> transfer(
+        @Parameter(description = "Transfer details including source, destination, and amount", required = true)
+        @RequestBody TransferRequest request
+    ) {
+        // Business logic moved to service layer
+        accountService.transfer(request);
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Transfer successful", null));
     }
 
     // Financial analysis endpoint (placeholder)
     @PostMapping("/analyze")
-    @Operation(summary = "Analyze financial data", description = "Performs financial analysis using the Ollama API (placeholder).")
+    @Operation(
+        summary = "Analyze financial data", 
+        description = "Performs financial analysis using the Ollama API. This is a placeholder endpoint for future AI-powered financial insights."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Analysis result returned")
+        @ApiResponse(
+            responseCode = "200", 
+            description = "Analysis result returned",
+            content = @Content(schema = @Schema(implementation = com.jarom.funbankapp.dto.ApiResponse.class))
+        ),
+        @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "500", description = "Analysis service unavailable")
     })
-    public ResponseEntity<?> analyzeFinancialData(@RequestBody String inputData) {
-        // TODO: Define input/output structure
+    public ResponseEntity<com.jarom.funbankapp.dto.ApiResponse<String>> analyzeFinancialData(
+        @Parameter(description = "Financial data to analyze", required = true)
+        @RequestBody String inputData
+    ) {
+        // Business logic moved to service layer
         String result = financialAnalysisService.analyzeWithOllama(inputData);
-        return ResponseEntity.ok(result);
-    }
-
-    // Reusable method to verify account ownership
-    private boolean userOwnsAccount(User user, Long accountId) {
-        System.out.println("🧪 Checking if user owns accountId: " + accountId);
-        return accountDAO.findByUserId(user.getId())
-                .stream()
-                .anyMatch(acc -> acc.getId().equals(accountId));
-
+        return ResponseEntity.ok(com.jarom.funbankapp.dto.ApiResponse.success("Analysis completed", result));
     }
 
     // Helper method to get username from JWT
     private String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getName();
+    }
+
+    // Helper methods for conversion (these could be moved to a separate converter class)
+    private com.jarom.funbankapp.dto.AccountDTO convertToDTO(Account account) {
+        com.jarom.funbankapp.dto.AccountDTO dto = new com.jarom.funbankapp.dto.AccountDTO();
+        dto.setId(account.getId());
+        dto.setName(account.getName());
+        dto.setAccountNumber(account.getAccountNumber());
+        dto.setBalance(account.getBalance());
+        dto.setAccountType(com.jarom.funbankapp.dto.AccountDTO.AccountType.valueOf(account.getAccountType()));
+        dto.setColor(account.getColor());
+        return dto;
+    }
+
+    private Account convertToModel(com.jarom.funbankapp.dto.AccountDTO dto) {
+        Account account = new Account();
+        account.setId(dto.getId());
+        account.setName(dto.getName());
+        account.setAccountNumber(dto.getAccountNumber());
+        account.setBalance(dto.getBalance());
+        account.setAccountType(dto.getAccountType().name());
+        account.setColor(dto.getColor());
+        return account;
     }
 }

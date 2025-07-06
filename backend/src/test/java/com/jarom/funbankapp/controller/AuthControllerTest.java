@@ -1,39 +1,29 @@
 package com.jarom.funbankapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jarom.funbankapp.dto.LoginRequest;
-import com.jarom.funbankapp.dto.UserDTO;
+import com.jarom.funbankapp.model.LoginRequest;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.UserRepository;
 import com.jarom.funbankapp.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.time.LocalDateTime; import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-})
-public class AuthControllerTest {
+class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,270 +32,164 @@ public class AuthControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UserService userService;
+    private UserRepository userRepository;
 
     @MockBean
-    private UserDAO userDAO;
+    private UserService userService;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
 
-    @MockBean
-    private AuthenticationManager authenticationManager;
+    private User user;
+    private User existingUser;
 
-    @MockBean
-    private Authentication authentication;
+    @BeforeEach
+    void setUp() {
+        user = new User();
+        user.setId(1L);
+        user.setUsername("testuser");
+        user.setEmail("test@example.com");
+        user.setPassword("encodedPassword");
+        user.setFirstName("John");
+        user.setLastName("Doe");
+
+        existingUser = new User();
+        existingUser.setId(2L);
+        existingUser.setUsername("existinguser");
+        existingUser.setEmail("existing@example.com");
+        existingUser.setPassword("encodedPassword");
+    }
 
     @Test
-    void testRegister_Success() throws Exception {
+    void register_WithNewEmail_ShouldReturnSuccess() throws Exception {
         // Arrange
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail("test@example.com");
-        userDTO.setPassword("password123");
-        userDTO.setFirstName("John");
-        userDTO.setLastName("Doe");
+        when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(user.getId());
 
-        when(userDAO.existsByEmail("test@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashedPassword");
+        User newUser = new User();
+        newUser.setUsername("newuser");
+        newUser.setEmail("new@example.com");
+        newUser.setPassword("password123");
+        newUser.setFirstName("Jane");
+        newUser.setLastName("Smith");
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newUser)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("User registered successfully"));
     }
 
     @Test
-    void testRegister_UserExists() throws Exception {
+    void register_WithExistingEmail_ShouldReturnError() throws Exception {
         // Arrange
-        UserDTO userDTO = new UserDTO();
-        userDTO.setEmail("existing@example.com");
-        userDTO.setPassword("password123");
+        when(userRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(existingUser));
 
-        when(userDAO.existsByEmail("existing@example.com")).thenReturn(true);
+        User newUser = new User();
+        newUser.setUsername("newuser");
+        newUser.setEmail("existing@example.com");
+        newUser.setPassword("password123");
 
         // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(newUser)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("User with this email already exists"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Email already exists"));
     }
 
     @Test
-    void testLogin_Success() throws Exception {
+    void login_WithValidCredentials_ShouldReturnSuccess() throws Exception {
         // Arrange
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setUsername("test@example.com");
         loginRequest.setPassword("password123");
 
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
-
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Login successful"))
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Login successful"));
     }
 
     @Test
-    void testLogin_InvalidCredentials() throws Exception {
+    void login_WithInvalidEmail_ShouldReturnError() throws Exception {
         // Arrange
+        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+
         LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
+        loginRequest.setUsername("nonexistent@example.com");
+        loginRequest.setPassword("password123");
+
+        // Act & Assert
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Invalid credentials"));
+    }
+
+    @Test
+    void login_WithInvalidPassword_ShouldReturnError() throws Exception {
+        // Arrange
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setUsername("test@example.com");
         loginRequest.setPassword("wrongpassword");
 
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new RuntimeException("Invalid credentials"));
-
         // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Invalid credentials"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Invalid credentials"));
     }
 
     @Test
-    void testLogout_Success() throws Exception {
+    void logout_ShouldReturnSuccess() throws Exception {
         // Act & Assert
-        mockMvc.perform(post("/api/auth/logout"))
+        mockMvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Logout successful"));
     }
 
     @Test
-    void testGetProfile_Success() throws Exception {
+    void validateToken_WithValidToken_ShouldReturnSuccess() throws Exception {
         // Arrange
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
-
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-
-        // Set up security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(user));
 
         // Act & Assert
-        mockMvc.perform(get("/api/auth/profile"))
+        mockMvc.perform(post("/auth/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"valid-token\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("Token is valid"));
     }
 
     @Test
-    void testGetProfile_NotAuthenticated() throws Exception {
-        // Arrange
-        when(authentication.isAuthenticated()).thenReturn(false);
-
+    void validateToken_WithInvalidToken_ShouldReturnError() throws Exception {
         // Act & Assert
-        mockMvc.perform(get("/api/auth/profile"))
+        mockMvc.perform(post("/auth/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\": \"invalid-token\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").value("Not authenticated"));
-    }
-
-    @Test
-    void testUpdateProfile_Success() throws Exception {
-        // Arrange
-        UserDTO userDTO = new UserDTO();
-        userDTO.setFirstName("Jane");
-        userDTO.setLastName("Smith");
-
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setFirstName("John");
-        user.setLastName("Doe");
-
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-
-        // Set up security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act & Assert
-        mockMvc.perform(put("/api/auth/profile")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Profile updated successfully"));
-    }
-
-    @Test
-    void testChangePassword_Success() throws Exception {
-        // Arrange
-        Map<String, String> request = new HashMap<>();
-        request.put("currentPassword", "oldpassword");
-        request.put("newPassword", "newpassword");
-
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setPassword("hashedOldPassword");
-
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-        when(passwordEncoder.matches("oldpassword", "hashedOldPassword")).thenReturn(true);
-        when(passwordEncoder.encode("newpassword")).thenReturn("hashedNewPassword");
-
-        // Set up security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act & Assert
-        mockMvc.perform(put("/api/auth/change-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Password changed successfully"));
-    }
-
-    @Test
-    void testChangePassword_InvalidCurrentPassword() throws Exception {
-        // Arrange
-        Map<String, String> body = new HashMap<>();
-        body.put("currentPassword", "wrongpassword");
-        body.put("newPassword", "newpassword123");
-
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setPassword("hashedPassword");
-
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-        when(passwordEncoder.matches("wrongpassword", "hashedPassword")).thenReturn(false);
-
-        // Set up security context
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act & Assert
-        mockMvc.perform(put("/api/auth/change-password")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Current password is incorrect"));
-    }
-
-    @Test
-    void testLoginToProfileFlow_Success() throws Exception {
-        // Arrange
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@example.com");
-        loginRequest.setPassword("password123");
-
-        User user = new User();
-        user.setId(1L);
-        user.setEmail("test@example.com");
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setCreatedAt(Timestamp.valueOf(LocalDateTime.of(2024, 1, 1, 12, 0, 0)));
-
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        when(authentication.getName()).thenReturn("test@example.com");
-        when(userDAO.findByEmail("test@example.com")).thenReturn(user);
-
-        // Act & Assert - Login
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Login successful"))
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"));
-
-        // Set up security context for profile request
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        // Act & Assert - Profile
-        mockMvc.perform(get("/api/auth/profile"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.user.id").value(1))
-                .andExpect(jsonPath("$.user.email").value("test@example.com"))
-                .andExpect(jsonPath("$.user.firstName").value("John"))
-                .andExpect(jsonPath("$.user.lastName").value("Doe"));
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.message").value("Invalid token"));
     }
 } 

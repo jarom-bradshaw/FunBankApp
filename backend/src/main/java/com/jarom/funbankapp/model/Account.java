@@ -3,15 +3,56 @@ package com.jarom.funbankapp.model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+@Schema(description = "Bank account entity")
 public class Account {
+    
+    @Schema(description = "Unique identifier for the account", example = "1")
     private Long id;
+    
+    @NotNull(message = "User ID is required")
+    @Positive(message = "User ID must be positive")
+    @Schema(description = "ID of the user who owns this account", example = "123", required = true)
     private Long userId;
+    
+    @NotBlank(message = "Account number is required")
+    @Size(max = 50, message = "Account number cannot exceed 50 characters")
+    @Schema(description = "Unique account number", example = "1234567890", required = true, maxLength = 50)
     private String accountNumber;
+    
+    @NotNull(message = "Balance is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "Balance cannot be negative")
+    @Digits(integer = 15, fraction = 2, message = "Balance must have at most 15 digits and 2 decimal places")
+    @Schema(description = "Current account balance", example = "1250.75", required = true, minimum = "0.0")
     private BigDecimal balance;
+    
+    @NotBlank(message = "Account type is required")
+    @Pattern(regexp = "^(checking|savings|credit|investment)$", message = "Account type must be one of: checking, savings, credit, investment")
+    @Schema(description = "Type of account", example = "checking", required = true, allowableValues = {"checking", "savings", "credit", "investment"})
     private String accountType;
+    
+    @NotBlank(message = "Account name is required")
+    @Size(min = 1, max = 100, message = "Account name must be between 1 and 100 characters")
+    @Schema(description = "User-friendly name for the account", example = "Main Checking Account", required = true, maxLength = 100)
     private String name;
+    
+    @Size(max = 7, message = "Color code cannot exceed 7 characters")
+    @Pattern(regexp = "^#[0-9A-Fa-f]{6}$", message = "Color must be a valid hex color code")
+    @Schema(description = "Hex color code for UI display", example = "#FF6B6B", maxLength = 7, pattern = "^#[0-9A-Fa-f]{6}$")
     private String color;
+    
+    @Schema(description = "Timestamp when account was created", example = "2024-01-15T10:30:00Z")
     private Timestamp createdAt;
+    
+    @Schema(description = "Timestamp when account was last updated", example = "2024-01-15T10:30:00Z")
     private Timestamp updatedAt;
     
     // Constructors

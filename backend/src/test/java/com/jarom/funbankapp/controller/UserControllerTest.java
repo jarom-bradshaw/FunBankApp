@@ -4,7 +4,7 @@ package com.jarom.funbankapp.controller;
 
 import com.jarom.funbankapp.model.LoginRequest;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.UserRepository;
 import com.jarom.funbankapp.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +25,8 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.Optional;
+
 @WebMvcTest(controllers = UserController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -34,7 +36,7 @@ public class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserDAO userDAO;
+    private UserRepository userRepository;
 
     @MockBean
     private PasswordEncoder passwordEncoder;
@@ -45,28 +47,30 @@ public class UserControllerTest {
     @Test
     void testRegister_UsernameExists() throws Exception {
         String requestJson = "{ \"username\": \"existingUser\", \"password\": \"password123\" }";
-        when(userDAO.existsByUsername("existingUser")).thenReturn(true);
+        when(userRepository.existsByUsername("existingUser")).thenReturn(true);
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Username already exists.")));
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Username already exists."));
     }
 
     @Test
     void testRegister_Success() throws Exception {
         String requestJson = "{ \"username\": \"newUser\", \"password\": \"password123\" }";
-        when(userDAO.existsByUsername("newUser")).thenReturn(false);
+        when(userRepository.existsByUsername("newUser")).thenReturn(false);
         when(passwordEncoder.encode("password123")).thenReturn("hashedPassword");
 
         mockMvc.perform(post("/api/users/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("User registered successfully!")));
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("User registered successfully!"));
 
-        verify(userDAO).save(argThat((User u) ->
+        verify(userRepository).save(argThat((User u) ->
                 u.getUsername().equals("newUser") && u.getPassword().equals("hashedPassword")
         ));
     }
@@ -78,7 +82,7 @@ public class UserControllerTest {
         user.setUsername("testUser");
         user.setPassword("hashedPassword");
 
-        when(userDAO.findByUsername("testUser")).thenReturn(user);
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("password123", "hashedPassword")).thenReturn(true);
         when(jwtService.generateToken("testUser")).thenReturn("dummyToken");
 
@@ -86,7 +90,8 @@ public class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Bearer dummyToken")));
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message").value("Bearer dummyToken"));
     }
 
     @Test
@@ -96,25 +101,27 @@ public class UserControllerTest {
         user.setUsername("testUser");
         user.setPassword("hashedPassword");
 
-        when(userDAO.findByUsername("testUser")).thenReturn(user);
+        when(userRepository.findByUsername("testUser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("wrongPassword", "hashedPassword")).thenReturn(false);
 
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("Invalid credentials")));
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Invalid credentials"));
     }
 
     @Test
     void testLogin_Exception() throws Exception {
         String loginJson = "{ \"username\": \"unknownUser\", \"password\": \"password123\" }";
-        when(userDAO.findByUsername("unknownUser")).thenThrow(new RuntimeException("User not found"));
+        when(userRepository.findByUsername("unknownUser")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/users/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(containsString("Invalid credentials")));
+                .andExpect(jsonPath("$.status").value("error"))
+                .andExpect(jsonPath("$.message").value("Invalid credentials"));
     }
 }

@@ -3,8 +3,8 @@ package com.jarom.funbankapp.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jarom.funbankapp.model.Goal;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.GoalDAO;
-import com.jarom.funbankapp.repository.UserDAO;
+import com.jarom.funbankapp.repository.GoalRepository;
+import com.jarom.funbankapp.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -35,10 +36,10 @@ public class GoalControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private GoalDAO goalDAO;
+    private GoalRepository goalRepository;
 
     @MockBean
-    private UserDAO userDAO;
+    private UserRepository userRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -71,7 +72,7 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void createGoal_ShouldCreateSuccessfully() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
         Goal request = new Goal();
         request.setName("New Goal");
@@ -82,14 +83,14 @@ public class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Goal created successfully!"));
+                .andExpect(jsonPath("$.message").value("Goal created successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void getUserGoals_ShouldReturnGoals() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findByUserId(1L)).thenReturn(testGoals);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findByUserId(1L)).thenReturn(testGoals);
 
         mockMvc.perform(get("/api/goals"))
                 .andExpect(status().isOk())
@@ -103,8 +104,8 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getGoal_ShouldReturnGoal_WhenGoalExists() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(1L)).thenReturn(testGoal);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(testGoal));
 
         mockMvc.perform(get("/api/goals/1"))
                 .andExpect(status().isOk())
@@ -115,8 +116,8 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getGoal_ShouldReturnNotFound_WhenGoalDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/goals/999"))
                 .andExpect(status().isNotFound());
@@ -125,25 +126,25 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getGoal_ShouldReturnForbidden_WhenUserDoesNotOwnGoal() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Goal otherUserGoal = new Goal();
         otherUserGoal.setId(1L);
         otherUserGoal.setUserId(999L); // Different user
         otherUserGoal.setName("Other user's goal");
         
-        when(goalDAO.findById(1L)).thenReturn(otherUserGoal);
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(otherUserGoal));
 
         mockMvc.perform(get("/api/goals/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void updateGoal_ShouldUpdateSuccessfully_WhenUserOwnsGoal() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(1L)).thenReturn(testGoal);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(testGoal));
 
         Goal request = new Goal();
         request.setName("Updated Goal");
@@ -153,14 +154,14 @@ public class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Goal updated successfully!"));
+                .andExpect(jsonPath("$.message").value("Goal updated successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void updateGoal_ShouldReturnNotFound_WhenGoalDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
         Goal request = new Goal();
         request.setName("Updated Goal");
@@ -174,13 +175,13 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void updateGoal_ShouldReturnForbidden_WhenUserDoesNotOwnGoal() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Goal otherUserGoal = new Goal();
         otherUserGoal.setId(1L);
         otherUserGoal.setUserId(999L); // Different user
         
-        when(goalDAO.findById(1L)).thenReturn(otherUserGoal);
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(otherUserGoal));
 
         Goal request = new Goal();
         request.setName("Updated Goal");
@@ -189,25 +190,25 @@ public class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void deleteGoal_ShouldDeleteSuccessfully_WhenUserOwnsGoal() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(1L)).thenReturn(testGoal);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(testGoal));
 
         mockMvc.perform(delete("/api/goals/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Goal deleted successfully!"));
+                .andExpect(jsonPath("$.message").value("Goal deleted successfully!"));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void deleteGoal_ShouldReturnNotFound_WhenGoalDoesNotExist() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findById(999L)).thenReturn(null);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/goals/999"))
                 .andExpect(status().isNotFound());
@@ -216,24 +217,24 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void deleteGoal_ShouldReturnForbidden_WhenUserDoesNotOwnGoal() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         
         Goal otherUserGoal = new Goal();
         otherUserGoal.setId(1L);
         otherUserGoal.setUserId(999L); // Different user
         
-        when(goalDAO.findById(1L)).thenReturn(otherUserGoal);
+        when(goalRepository.findById(1L)).thenReturn(Optional.of(otherUserGoal));
 
         mockMvc.perform(delete("/api/goals/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
     }
 
     @Test
     @WithMockUser(username = "testuser")
     void getGoalProgress_ShouldReturnProgress() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findByUserId(1L)).thenReturn(testGoals);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findByUserId(1L)).thenReturn(testGoals);
 
         mockMvc.perform(get("/api/goals/progress"))
                 .andExpect(status().isOk())
@@ -246,8 +247,8 @@ public class GoalControllerTest {
     @Test
     @WithMockUser(username = "testuser")
     void getGoalProgress_ShouldHandleEmptyGoals() throws Exception {
-        when(userDAO.findByUsername("testuser")).thenReturn(testUser);
-        when(goalDAO.findByUserId(1L)).thenReturn(Arrays.asList());
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(goalRepository.findByUserId(1L)).thenReturn(Arrays.asList());
 
         mockMvc.perform(get("/api/goals/progress"))
                 .andExpect(status().isOk())

@@ -1,12 +1,14 @@
 package com.jarom.funbankapp.controller;
 
+import com.jarom.funbankapp.dto.ApiResponse;
+import com.jarom.funbankapp.model.Account;
+import com.jarom.funbankapp.model.Transaction;
 import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.repository.UserDAO;
-import com.jarom.funbankapp.repository.TransactionDAO;
-import com.jarom.funbankapp.repository.AccountDAO;
+import com.jarom.funbankapp.repository.AccountRepository;
+import com.jarom.funbankapp.repository.TransactionRepository;
+import com.jarom.funbankapp.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -14,136 +16,88 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
 @RestController
 @RequestMapping("/api/analytics")
-@io.swagger.v3.oas.annotations.tags.Tag(name = "Analytics", description = "Financial analytics and reporting")
 public class AnalyticsController {
 
-    private final UserDAO userDAO;
-    private final TransactionDAO transactionDAO;
-    private final AccountDAO accountDAO;
+    private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
 
-    public AnalyticsController(UserDAO userDAO, TransactionDAO transactionDAO, AccountDAO accountDAO) {
-        this.userDAO = userDAO;
-        this.transactionDAO = transactionDAO;
-        this.accountDAO = accountDAO;
+    public AnalyticsController(UserRepository userRepository, TransactionRepository transactionRepository, AccountRepository accountRepository) {
+        this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
     }
 
     @GetMapping("/spending")
-    @Operation(summary = "Get spending analytics", description = "Retrieves spending analysis for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Spending analytics retrieved successfully")
-    })
-    public ResponseEntity<?> getSpendingAnalytics(@RequestParam(defaultValue = "30") int days) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    public ResponseEntity<ApiResponse<Map<String, BigDecimal>>> getSpendingAnalytics(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Map<String, BigDecimal> spendingByCategory = transactionDAO.getSpendingByCategory(user.getId(), days);
-        
-        BigDecimal totalSpent = spendingByCategory.values().stream()
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        Map<String, Object> analytics = new HashMap<>();
-        analytics.put("totalSpent", totalSpent);
-        analytics.put("spendingByCategory", spendingByCategory);
-        analytics.put("period", days + " days");
-        analytics.put("averageDailySpending", totalSpent.divide(new BigDecimal(days), 2, BigDecimal.ROUND_HALF_UP));
-
-        return ResponseEntity.ok(analytics);
+            Map<String, BigDecimal> spendingByCategory = transactionRepository.getSpendingByCategory(user.getId(), 30);
+            return ResponseEntity.ok(ApiResponse.success("Spending analytics retrieved successfully", spendingByCategory));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve spending analytics: " + e.getMessage()));
+        }
     }
 
-    @GetMapping("/income")
-    @Operation(summary = "Get income analytics", description = "Retrieves income analysis for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Income analytics retrieved successfully")
-    })
-    public ResponseEntity<?> getIncomeAnalytics(@RequestParam(defaultValue = "30") int days) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    @GetMapping("/transactions")
+    public ResponseEntity<ApiResponse<List<Transaction>>> getTransactionAnalytics(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // This would require adding income tracking to TransactionDAO
-        Map<String, Object> analytics = new HashMap<>();
-        analytics.put("totalIncome", BigDecimal.ZERO);
-        analytics.put("incomeByCategory", new HashMap<>());
-        analytics.put("period", days + " days");
-        analytics.put("averageDailyIncome", BigDecimal.ZERO);
-
-        return ResponseEntity.ok(analytics);
+            List<Transaction> transactions = transactionRepository.getRecentTransactions(user.getId(), 100);
+            return ResponseEntity.ok(ApiResponse.success("Transaction analytics retrieved successfully", transactions));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve transaction analytics: " + e.getMessage()));
+        }
     }
 
-    @GetMapping("/net-worth")
-    @Operation(summary = "Get net worth analytics", description = "Retrieves net worth analysis for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Net worth analytics retrieved successfully")
-    })
-    public ResponseEntity<?> getNetWorthAnalytics() {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    @GetMapping("/accounts")
+    public ResponseEntity<ApiResponse<List<Account>>> getAccountAnalytics(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<com.jarom.funbankapp.model.Account> accounts = accountDAO.findByUserId(user.getId());
-        
-        BigDecimal totalAssets = accounts.stream()
-                .map(com.jarom.funbankapp.model.Account::getBalance)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        // For now, assuming no debts (would need debt tracking)
-        BigDecimal totalLiabilities = BigDecimal.ZERO;
-        BigDecimal netWorth = totalAssets.subtract(totalLiabilities);
-
-        Map<String, Object> analytics = new HashMap<>();
-        analytics.put("totalAssets", totalAssets);
-        analytics.put("totalLiabilities", totalLiabilities);
-        analytics.put("netWorth", netWorth);
-        analytics.put("accountCount", accounts.size());
-
-        return ResponseEntity.ok(analytics);
+            List<Account> accounts = accountRepository.findByUserId(user.getId());
+            return ResponseEntity.ok(ApiResponse.success("Account analytics retrieved successfully", accounts));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve account analytics: " + e.getMessage()));
+        }
     }
 
-    @GetMapping("/cash-flow")
-    @Operation(summary = "Get cash flow analytics", description = "Retrieves cash flow analysis for the authenticated user.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Cash flow analytics retrieved successfully")
-    })
-    public ResponseEntity<?> getCashFlowAnalytics(@RequestParam(defaultValue = "30") int days) {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+    @GetMapping("/summary")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getAnalyticsSummary(Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // This would require more sophisticated cash flow tracking
-        Map<String, Object> analytics = new HashMap<>();
-        analytics.put("inflow", BigDecimal.ZERO);
-        analytics.put("outflow", BigDecimal.ZERO);
-        analytics.put("netCashFlow", BigDecimal.ZERO);
-        analytics.put("period", days + " days");
+            List<Account> accounts = accountRepository.findByUserId(user.getId());
+            Map<String, BigDecimal> spendingByCategory = transactionRepository.getSpendingByCategory(user.getId(), 30);
 
-        return ResponseEntity.ok(analytics);
-    }
+            BigDecimal totalBalance = accounts.stream()
+                    .map(Account::getBalance)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    @GetMapping("/investment-performance")
-    @Operation(summary = "Get investment performance analytics", description = "Retrieves investment performance analysis.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Investment performance analytics retrieved successfully")
-    })
-    public ResponseEntity<?> getInvestmentPerformance() {
-        String username = getCurrentUsername();
-        User user = userDAO.findByUsername(username);
+            BigDecimal totalSpending = spendingByCategory.values().stream()
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // This would require investment tracking
-        Map<String, Object> analytics = new HashMap<>();
-        analytics.put("totalInvested", BigDecimal.ZERO);
-        analytics.put("currentValue", BigDecimal.ZERO);
-        analytics.put("totalReturn", BigDecimal.ZERO);
-        analytics.put("returnPercentage", BigDecimal.ZERO);
-        analytics.put("portfolioDiversification", new HashMap<>());
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("totalBalance", totalBalance);
+            summary.put("totalSpending", totalSpending);
+            summary.put("spendingByCategory", spendingByCategory);
+            summary.put("accountCount", accounts.size());
 
-        return ResponseEntity.ok(analytics);
-    }
-
-    private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
+            return ResponseEntity.ok(ApiResponse.success("Analytics summary retrieved successfully", summary));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Failed to retrieve analytics summary: " + e.getMessage()));
+        }
     }
 } 

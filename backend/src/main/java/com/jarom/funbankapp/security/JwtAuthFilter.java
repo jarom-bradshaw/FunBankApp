@@ -29,9 +29,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Skip JWT authentication for registration and login endpoints
+        // Skip JWT authentication for public endpoints
         String requestURI = request.getRequestURI();
-        if (requestURI.equals("/api/users/register") || requestURI.equals("/api/users/login")) {
+        if (requestURI.equals("/api/auth/register") || 
+            requestURI.equals("/api/auth/login") || 
+            requestURI.equals("/api/health") ||
+            requestURI.startsWith("/swagger-ui") ||
+            requestURI.startsWith("/v3/api-docs") ||
+            requestURI.equals("/swagger-ui.html")) {
             System.out.println("🔓 Skipping JWT auth for: " + requestURI);
             filterChain.doFilter(request, response);
             return;

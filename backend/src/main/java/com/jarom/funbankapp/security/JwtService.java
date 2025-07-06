@@ -23,8 +23,26 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
-        byte[] decodedKey = Base64.getDecoder().decode(jwtProperties.getSecret());
-        this.key = Keys.hmacShaKeyFor(decodedKey);
+        System.out.println("🔧 JwtService.init() called");
+        System.out.println("🔧 jwtProperties: " + jwtProperties);
+        
+        String secret = jwtProperties.getSecret();
+        System.out.println("🔧 JWT secret from properties: " + (secret != null ? "NOT NULL" : "NULL"));
+        System.out.println("🔧 JWT secret length: " + (secret != null ? secret.length() : "N/A"));
+        
+        if (secret == null || secret.trim().isEmpty()) {
+            System.err.println("❌ JWT secret is null or empty!");
+            throw new IllegalStateException("JWT secret is not configured. Please set jwt.secret in application.properties");
+        }
+        
+        try {
+            byte[] decodedKey = Base64.getDecoder().decode(secret);
+            this.key = Keys.hmacShaKeyFor(decodedKey);
+            System.out.println("✅ JWT key successfully initialized");
+        } catch (Exception e) {
+            System.err.println("❌ Error initializing JWT key: " + e.getMessage());
+            throw e;
+        }
     }
 
     public String generateToken(String username) {

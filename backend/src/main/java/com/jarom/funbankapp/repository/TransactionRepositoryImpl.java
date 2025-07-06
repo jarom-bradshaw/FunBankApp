@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
-public class TransactionDAO {
+public class TransactionRepositoryImpl implements TransactionRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public TransactionDAO(JdbcTemplate jdbcTemplate) {
+    public TransactionRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -31,19 +31,19 @@ public class TransactionDAO {
         return transaction;
     };
 
-    // Create a new transaction record
+    @Override
     public int logTransaction(Long accountId, String type, BigDecimal amount, String description) {
         String sql = "INSERT INTO transactions (account_id, type, amount, description) VALUES (?, ?, ?, ?)";
         return jdbcTemplate.update(sql, accountId, type, amount, description);
     }
 
-    // Get all transactions for an account
+    @Override
     public List<Transaction> findByAccountId(Long accountId) {
         String sql = "SELECT * FROM transactions WHERE account_id = ? ORDER BY created_at DESC";
         return jdbcTemplate.query(sql, transactionRowMapper, accountId);
     }
 
-    // Get recent transactions for a user (across all their accounts)
+    @Override
     public List<Transaction> getRecentTransactions(Long userId, int limit) {
         String sql = "SELECT t.* FROM transactions t " +
                     "JOIN accounts a ON t.account_id = a.id " +
@@ -53,7 +53,7 @@ public class TransactionDAO {
         return jdbcTemplate.query(sql, transactionRowMapper, userId, limit);
     }
 
-    // Get spending by category for a user (across all their accounts)
+    @Override
     public Map<String, BigDecimal> getSpendingByCategory(Long userId, int days) {
         String sql = "SELECT t.description as category, SUM(t.amount) as total " +
                     "FROM transactions t " +
@@ -72,4 +72,4 @@ public class TransactionDAO {
                     row -> (BigDecimal) row.get("total")
                 ));
     }
-}
+} 
