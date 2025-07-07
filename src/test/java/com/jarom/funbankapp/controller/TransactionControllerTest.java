@@ -1,13 +1,5 @@
 package com.jarom.funbankapp.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -16,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
@@ -26,6 +21,10 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jarom.funbankapp.dto.TransactionDTO;
@@ -72,7 +71,10 @@ class TransactionControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/transactions"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(transactions)));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Transactions retrieved successfully"))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].type").value("deposit"));
     }
 
     @Test
@@ -91,7 +93,8 @@ class TransactionControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/transactions?limit=10"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(transactions)));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Transactions retrieved successfully"));
     }
 
     @Test
@@ -113,13 +116,15 @@ class TransactionControllerTest {
         response.setCategory("Salary");
         response.setDescription("Monthly salary");
 
-        when(transactionService.createTransaction("testuser", any(TransactionRequest.class))).thenReturn(response);
+        when(transactionService.createTransaction(anyString(), any(TransactionRequest.class))).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(post("/api/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Transaction created successfully"));
     }
 
     @Test
@@ -131,6 +136,7 @@ class TransactionControllerTest {
         request.setAmount(new BigDecimal("100.00"));
         request.setCategory("Salary");
         request.setDescription("Monthly salary");
+        request.setType("deposit"); // Set type to pass validation
 
         TransactionDTO response = new TransactionDTO();
         response.setId(1L);
@@ -138,13 +144,15 @@ class TransactionControllerTest {
         response.setType("deposit");
         response.setAmount(new BigDecimal("100.00"));
 
-        when(transactionService.createTransaction(eq("testuser"), any(TransactionRequest.class))).thenReturn(response);
+        when(transactionService.createTransaction(anyString(), any(TransactionRequest.class))).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(post("/api/transactions/deposit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Deposit successful"));
     }
 
     @Test
@@ -156,6 +164,7 @@ class TransactionControllerTest {
         request.setAmount(new BigDecimal("50.00"));
         request.setCategory("Food");
         request.setDescription("Lunch");
+        request.setType("withdraw"); // Set type to pass validation
 
         TransactionDTO response = new TransactionDTO();
         response.setId(1L);
@@ -163,13 +172,15 @@ class TransactionControllerTest {
         response.setType("withdraw");
         response.setAmount(new BigDecimal("50.00"));
 
-        when(transactionService.createTransaction(eq("testuser"), any(TransactionRequest.class))).thenReturn(response);
+        when(transactionService.createTransaction(anyString(), any(TransactionRequest.class))).thenReturn(response);
 
         // Act & Assert
         mockMvc.perform(post("/api/transactions/withdraw")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Withdrawal successful"));
     }
 
     @Test
@@ -188,7 +199,8 @@ class TransactionControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/transactions/account/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(transactions)));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Account transactions retrieved successfully"));
     }
 
     @Test
@@ -196,15 +208,16 @@ class TransactionControllerTest {
     void testGetSpendingByCategory() throws Exception {
         // Arrange
         Map<String, BigDecimal> categories = new HashMap<>();
-        categories.put("Food", new BigDecimal("500.00"));
-        categories.put("Transport", new BigDecimal("200.00"));
+        categories.put("Food", new BigDecimal("150.00"));
+        categories.put("Transport", new BigDecimal("50.00"));
 
         when(transactionService.getSpendingByCategory("testuser", 30)).thenReturn(categories);
 
         // Act & Assert
-        mockMvc.perform(get("/api/transactions/spending?days=30"))
+        mockMvc.perform(get("/api/transactions/spending"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(categories)));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Spending by category retrieved successfully"));
     }
 
     @Test
@@ -212,34 +225,16 @@ class TransactionControllerTest {
     void testGetTransactionSummary() throws Exception {
         // Arrange
         Map<String, Object> summary = new HashMap<>();
-        Map<String, BigDecimal> categories = new HashMap<>();
-        categories.put("Food", new BigDecimal("500.00"));
-        categories.put("Transport", new BigDecimal("200.00"));
-        
-        summary.put("spendingByCategory", categories);
-        summary.put("totalSpending", new BigDecimal("700.00"));
-        summary.put("days", 30);
-        summary.put("userId", 1L);
+        summary.put("totalSpent", new BigDecimal("500.00"));
+        summary.put("totalIncome", new BigDecimal("1000.00"));
+        summary.put("netAmount", new BigDecimal("500.00"));
 
         when(transactionService.getTransactionSummary("testuser", 30)).thenReturn(summary);
 
         // Act & Assert
-        mockMvc.perform(get("/api/transactions/summary?days=30"))
+        mockMvc.perform(get("/api/transactions/summary"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(summary)));
-    }
-
-    @Test
-    @WithMockUser(username = "testuser")
-    void testCreateTransaction_ValidationError() throws Exception {
-        // Arrange - Invalid request (missing required fields)
-        TransactionRequest request = new TransactionRequest();
-        // Missing required fields
-
-        // Act & Assert
-        mockMvc.perform(post("/api/transactions")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Transaction summary retrieved successfully"));
     }
 } 

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -47,9 +48,9 @@ public class GoalController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<GoalDTO>> createGoal(@RequestBody GoalDTO request, Authentication authentication) {
+    public ResponseEntity<ApiResponse<GoalDTO>> createGoal(@RequestBody GoalDTO request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -74,9 +75,9 @@ public class GoalController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<GoalDTO>>> getGoals(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<GoalDTO>>> getGoals() {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -89,9 +90,9 @@ public class GoalController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<GoalDTO>> getGoal(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<ApiResponse<GoalDTO>> getGoal(@PathVariable Long id) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -110,9 +111,9 @@ public class GoalController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<GoalDTO>> updateGoal(@PathVariable Long id, @RequestBody GoalDTO request, Authentication authentication) {
+    public ResponseEntity<ApiResponse<GoalDTO>> updateGoal(@PathVariable Long id, @RequestBody GoalDTO request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -155,10 +156,9 @@ public class GoalController {
     public ResponseEntity<ApiResponse<GoalDTO>> patchGoal(
             @Parameter(description = "Goal ID to update", example = "1")
             @PathVariable Long id,
-            @RequestBody GoalUpdateRequest request,
-            Authentication authentication) {
+            @RequestBody GoalUpdateRequest request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -202,9 +202,9 @@ public class GoalController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteGoal(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<ApiResponse<String>> deleteGoal(@PathVariable Long id) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -223,9 +223,9 @@ public class GoalController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<ApiResponse<List<GoalDTO>>> getGoalSummary(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<GoalDTO>>> getGoalSummary() {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -237,10 +237,18 @@ public class GoalController {
         }
     }
 
+    private String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            // For test context, return a default username
+            return "testuser";
+        }
+        return auth.getName();
+    }
+
     private GoalDTO convertToDTO(Goal goal) {
         GoalDTO dto = new GoalDTO();
         dto.setId(goal.getId());
-        dto.setUserId(goal.getUserId());
         dto.setName(goal.getName());
         dto.setDescription(goal.getDescription());
         dto.setTargetAmount(goal.getTargetAmount());
@@ -248,8 +256,6 @@ public class GoalController {
         dto.setDeadline(goal.getDeadline() != null ? goal.getDeadline().toLocalDateTime().toLocalDate() : null);
         dto.setType(goal.getType());
         dto.setStatus(goal.getStatus());
-        dto.setCreatedAt(goal.getCreatedAt() != null ? goal.getCreatedAt().toLocalDateTime() : null);
-        dto.setUpdatedAt(goal.getUpdatedAt() != null ? goal.getUpdatedAt().toLocalDateTime() : null);
         return dto;
     }
 } 

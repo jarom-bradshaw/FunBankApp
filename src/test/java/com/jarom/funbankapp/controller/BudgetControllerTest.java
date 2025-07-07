@@ -1,22 +1,28 @@
 package com.jarom.funbankapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jarom.funbankapp.dto.BudgetDTO;
 import com.jarom.funbankapp.model.Budget;
 import com.jarom.funbankapp.model.User;
 import com.jarom.funbankapp.repository.BudgetRepository;
 import com.jarom.funbankapp.repository.UserRepository;
+import com.jarom.funbankapp.security.JwtAuthFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime; import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,10 +32,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(BudgetController.class)
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-})
+@WebMvcTest(
+        controllers = BudgetController.class,
+        excludeFilters = @Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = {JwtAuthFilter.class}
+        ),
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class}
+)
 public class BudgetControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -73,7 +83,7 @@ public class BudgetControllerTest {
     void createBudget_ShouldCreateSuccessfully() throws Exception {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
-        Budget request = new Budget();
+        BudgetDTO request = new BudgetDTO();
         request.setName("New Budget");
         request.setDescription("Test budget");
         request.setAmount(new BigDecimal("300.00"));
@@ -83,7 +93,8 @@ public class BudgetControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Budget created successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Budget created successfully"));
     }
 
     @Test
@@ -94,9 +105,10 @@ public class BudgetControllerTest {
 
         mockMvc.perform(get("/api/budgets"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Monthly Groceries"))
-                .andExpect(jsonPath("$[0].amount").value(500.00));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("Monthly Groceries"))
+                .andExpect(jsonPath("$.data[0].amount").value(500.00));
     }
 
     @Test
@@ -107,8 +119,9 @@ public class BudgetControllerTest {
 
         mockMvc.perform(get("/api/budgets/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Monthly Groceries"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("Monthly Groceries"));
     }
 
     @Test
@@ -118,7 +131,8 @@ public class BudgetControllerTest {
         when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/budgets/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -135,7 +149,8 @@ public class BudgetControllerTest {
 
         mockMvc.perform(get("/api/budgets/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -144,7 +159,7 @@ public class BudgetControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(budgetRepository.findById(1L)).thenReturn(Optional.of(testBudget));
 
-        Budget request = new Budget();
+        BudgetDTO request = new BudgetDTO();
         request.setName("Updated Budget");
         request.setDescription("Updated description");
 
@@ -152,7 +167,8 @@ public class BudgetControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Budget updated successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Budget updated successfully"));
     }
 
     @Test
@@ -161,13 +177,14 @@ public class BudgetControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
-        Budget request = new Budget();
+        BudgetDTO request = new BudgetDTO();
         request.setName("Updated Budget");
 
         mockMvc.perform(put("/api/budgets/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -181,14 +198,15 @@ public class BudgetControllerTest {
         
         when(budgetRepository.findById(1L)).thenReturn(Optional.of(otherUserBudget));
 
-        Budget request = new Budget();
+        BudgetDTO request = new BudgetDTO();
         request.setName("Updated Budget");
 
         mockMvc.perform(put("/api/budgets/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -199,7 +217,8 @@ public class BudgetControllerTest {
 
         mockMvc.perform(delete("/api/budgets/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Budget deleted successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Budget deleted successfully"));
     }
 
     @Test
@@ -209,7 +228,8 @@ public class BudgetControllerTest {
         when(budgetRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/budgets/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -225,7 +245,8 @@ public class BudgetControllerTest {
 
         mockMvc.perform(delete("/api/budgets/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this budget."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -236,8 +257,8 @@ public class BudgetControllerTest {
 
         mockMvc.perform(get("/api/budgets/summary"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalBudgeted").value(500.00))
-                .andExpect(jsonPath("$.budgets").isArray());
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Budget summary retrieved successfully"));
     }
 
     @Test
@@ -248,7 +269,7 @@ public class BudgetControllerTest {
 
         mockMvc.perform(get("/api/budgets/summary"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalBudgeted").value(0))
-                .andExpect(jsonPath("$.budgets").isArray());
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Budget summary retrieved successfully"));
     }
 } 

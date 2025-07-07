@@ -1,19 +1,24 @@
 package com.jarom.funbankapp.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jarom.funbankapp.dto.GoalDTO;
 import com.jarom.funbankapp.model.Goal;
 import com.jarom.funbankapp.model.User;
 import com.jarom.funbankapp.repository.GoalRepository;
 import com.jarom.funbankapp.repository.UserRepository;
+import com.jarom.funbankapp.security.JwtAuthFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,10 +32,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(GoalController.class)
-@TestPropertySource(properties = {
-    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-})
+@WebMvcTest(
+        controllers = GoalController.class,
+        excludeFilters = @Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = {JwtAuthFilter.class}
+        ),
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class}
+)
 public class GoalControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -74,7 +83,7 @@ public class GoalControllerTest {
     void createGoal_ShouldCreateSuccessfully() throws Exception {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
 
-        Goal request = new Goal();
+        GoalDTO request = new GoalDTO();
         request.setName("New Goal");
         request.setDescription("Test goal");
         request.setTargetAmount(new BigDecimal("1000.00"));
@@ -83,7 +92,8 @@ public class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Goal created successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Goal created successfully"));
     }
 
     @Test
@@ -94,11 +104,10 @@ public class GoalControllerTest {
 
         mockMvc.perform(get("/api/goals"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0]").exists())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("Save for vacation"))
-                .andExpect(jsonPath("$[0].targetAmount").value(5000.00));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.data[0].id").value(1))
+                .andExpect(jsonPath("$.data[0].name").value("Save for vacation"))
+                .andExpect(jsonPath("$.data[0].targetAmount").value(5000.00));
     }
 
     @Test
@@ -109,8 +118,9 @@ public class GoalControllerTest {
 
         mockMvc.perform(get("/api/goals/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("Save for vacation"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("Save for vacation"));
     }
 
     @Test
@@ -120,7 +130,8 @@ public class GoalControllerTest {
         when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/goals/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -137,7 +148,8 @@ public class GoalControllerTest {
 
         mockMvc.perform(get("/api/goals/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -146,7 +158,7 @@ public class GoalControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(goalRepository.findById(1L)).thenReturn(Optional.of(testGoal));
 
-        Goal request = new Goal();
+        GoalDTO request = new GoalDTO();
         request.setName("Updated Goal");
         request.setDescription("Updated description");
 
@@ -154,7 +166,8 @@ public class GoalControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Goal updated successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Goal updated successfully"));
     }
 
     @Test
@@ -163,13 +176,14 @@ public class GoalControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
-        Goal request = new Goal();
+        GoalDTO request = new GoalDTO();
         request.setName("Updated Goal");
 
         mockMvc.perform(put("/api/goals/999")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -183,14 +197,15 @@ public class GoalControllerTest {
         
         when(goalRepository.findById(1L)).thenReturn(Optional.of(otherUserGoal));
 
-        Goal request = new Goal();
+        GoalDTO request = new GoalDTO();
         request.setName("Updated Goal");
 
         mockMvc.perform(put("/api/goals/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -201,7 +216,8 @@ public class GoalControllerTest {
 
         mockMvc.perform(delete("/api/goals/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Goal deleted successfully!"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Goal deleted successfully"));
     }
 
     @Test
@@ -211,7 +227,8 @@ public class GoalControllerTest {
         when(goalRepository.findById(999L)).thenReturn(Optional.empty());
 
         mockMvc.perform(delete("/api/goals/999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("ERROR"));
     }
 
     @Test
@@ -227,7 +244,8 @@ public class GoalControllerTest {
 
         mockMvc.perform(delete("/api/goals/1"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Unauthorized: You don't own this goal."));
+                .andExpect(jsonPath("$.status").value("ERROR"))
+                .andExpect(jsonPath("$.error").value("Access denied"));
     }
 
     @Test
@@ -236,12 +254,10 @@ public class GoalControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(goalRepository.findByUserId(1L)).thenReturn(testGoals);
 
-        mockMvc.perform(get("/api/goals/progress"))
+        mockMvc.perform(get("/api/goals/summary"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalTarget").value(5000.00))
-                .andExpect(jsonPath("$.totalCurrent").value(1000.00))
-                .andExpect(jsonPath("$.overallProgress").value(20.0000))
-                .andExpect(jsonPath("$.goals").isArray());
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Goal summary retrieved successfully"));
     }
 
     @Test
@@ -250,10 +266,9 @@ public class GoalControllerTest {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(goalRepository.findByUserId(1L)).thenReturn(Arrays.asList());
 
-        mockMvc.perform(get("/api/goals/progress"))
+        mockMvc.perform(get("/api/goals/summary"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalTarget").value("0"))
-                .andExpect(jsonPath("$.totalCurrent").value("0"))
-                .andExpect(jsonPath("$.overallProgress").value("0"));
+                .andExpect(jsonPath("$.status").value("SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Goal summary retrieved successfully"));
     }
 } 

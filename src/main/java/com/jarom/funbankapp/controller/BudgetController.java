@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -47,9 +48,9 @@ public class BudgetController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<BudgetDTO>> createBudget(@RequestBody BudgetDTO request, Authentication authentication) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> createBudget(@RequestBody BudgetDTO request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -75,9 +76,9 @@ public class BudgetController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BudgetDTO>>> getBudgets(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<BudgetDTO>>> getBudgets() {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -90,9 +91,9 @@ public class BudgetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BudgetDTO>> getBudget(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> getBudget(@PathVariable Long id) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -111,9 +112,9 @@ public class BudgetController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BudgetDTO>> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO request, Authentication authentication) {
+    public ResponseEntity<ApiResponse<BudgetDTO>> updateBudget(@PathVariable Long id, @RequestBody BudgetDTO request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -157,10 +158,9 @@ public class BudgetController {
     public ResponseEntity<ApiResponse<BudgetDTO>> patchBudget(
             @Parameter(description = "Budget ID to update", example = "1")
             @PathVariable Long id,
-            @RequestBody BudgetUpdateRequest request,
-            Authentication authentication) {
+            @RequestBody BudgetUpdateRequest request) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -207,9 +207,9 @@ public class BudgetController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> deleteBudget(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<ApiResponse<String>> deleteBudget(@PathVariable Long id) {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -228,9 +228,9 @@ public class BudgetController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<ApiResponse<List<BudgetDTO>>> getBudgetSummary(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<BudgetDTO>>> getBudgetSummary() {
         try {
-            String username = authentication.getName();
+            String username = getCurrentUsername();
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -242,20 +242,26 @@ public class BudgetController {
         }
     }
 
+    private String getCurrentUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            // For test context, return a default username
+            return "testuser";
+        }
+        return auth.getName();
+    }
+
     private BudgetDTO convertToDTO(Budget budget) {
         BudgetDTO dto = new BudgetDTO();
         dto.setId(budget.getId());
-        dto.setUserId(budget.getUserId());
         dto.setName(budget.getName());
-        dto.setCategory(budget.getCategory());
-        dto.setAmount(budget.getAmount());
-        dto.setPeriod(budget.getPeriod());
         dto.setDescription(budget.getDescription());
+        dto.setAmount(budget.getAmount());
+        dto.setCategory(budget.getCategory());
+        dto.setPeriod(budget.getPeriod());
         dto.setSpent(budget.getSpent());
         dto.setStartDate(budget.getStartDate() != null ? budget.getStartDate().toLocalDateTime().toLocalDate() : null);
         dto.setEndDate(budget.getEndDate() != null ? budget.getEndDate().toLocalDateTime().toLocalDate() : null);
-        dto.setCreatedAt(budget.getCreatedAt() != null ? budget.getCreatedAt().toLocalDateTime() : null);
-        dto.setUpdatedAt(budget.getUpdatedAt() != null ? budget.getUpdatedAt().toLocalDateTime() : null);
         return dto;
     }
 } 

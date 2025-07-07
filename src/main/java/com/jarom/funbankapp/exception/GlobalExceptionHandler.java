@@ -70,6 +70,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        String message = ex.getMessage();
+        Map<String, Object> response = new HashMap<>();
+        
+        // Map specific exception messages to appropriate HTTP status codes
+        if (message != null) {
+            if (message.contains("Unauthorized") || message.contains("don't own this account")) {
+                response.put("error", "Forbidden");
+                response.put("message", message);
+                response.put("status", HttpStatus.FORBIDDEN.value());
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            } else if (message.contains("Insufficient funds") || message.contains("Invalid") || message.contains("Bad request")) {
+                response.put("error", "Bad request");
+                response.put("message", message);
+                response.put("status", HttpStatus.BAD_REQUEST.value());
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+        
+        // Default to internal server error for other runtime exceptions
+        response.put("error", "Internal server error");
+        response.put("message", "An unexpected error occurred");
+        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
         Map<String, Object> response = new HashMap<>();

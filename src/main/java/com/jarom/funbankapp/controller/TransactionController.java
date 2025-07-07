@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -48,11 +48,10 @@ public class TransactionController {
     @GetMapping
     @Operation(summary = "Get recent transactions", description = "Retrieve recent transactions for the authenticated user")
     public ResponseEntity<ApiResponse<List<TransactionDTO>>> getTransactions(
-            Authentication authentication,
             @Parameter(description = "Maximum number of transactions to return", example = "100")
             @RequestParam(defaultValue = "100") int limit) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             List<TransactionDTO> transactions = transactionService.getRecentTransactions(username, limit);
             return ResponseEntity.ok(ApiResponse.success("Transactions retrieved successfully", transactions));
         } catch (Exception e) {
@@ -63,10 +62,9 @@ public class TransactionController {
     @PostMapping
     @Operation(summary = "Create transaction", description = "Create a new transaction")
     public ResponseEntity<ApiResponse<TransactionDTO>> createTransaction(
-            @Valid @RequestBody TransactionRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransactionRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             TransactionDTO transaction = transactionService.createTransaction(username, request);
             return ResponseEntity.ok(ApiResponse.success("Transaction created successfully", transaction));
         } catch (Exception e) {
@@ -77,10 +75,9 @@ public class TransactionController {
     @PostMapping("/deposit")
     @Operation(summary = "Create deposit", description = "Create a deposit transaction")
     public ResponseEntity<ApiResponse<TransactionDTO>> deposit(
-            @Valid @RequestBody TransactionRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransactionRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             request.setType("deposit");
             TransactionDTO transaction = transactionService.createTransaction(username, request);
             return ResponseEntity.ok(ApiResponse.success("Deposit successful", transaction));
@@ -92,10 +89,9 @@ public class TransactionController {
     @PostMapping("/withdraw")
     @Operation(summary = "Create withdrawal", description = "Create a withdrawal transaction")
     public ResponseEntity<ApiResponse<TransactionDTO>> withdraw(
-            @Valid @RequestBody TransactionRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransactionRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             request.setType("withdraw");
             TransactionDTO transaction = transactionService.createTransaction(username, request);
             return ResponseEntity.ok(ApiResponse.success("Withdrawal successful", transaction));
@@ -107,10 +103,9 @@ public class TransactionController {
     @PostMapping("/transfer")
     @Operation(summary = "Transfer between accounts", description = "Transfer funds between two accounts")
     public ResponseEntity<ApiResponse<Map<String, TransactionDTO>>> transfer(
-            @Valid @RequestBody TransferRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransferRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             Map<String, TransactionDTO> result = transactionService.transferBetweenAccounts(username, request);
             return ResponseEntity.ok(ApiResponse.success("Transfer completed successfully", result));
         } catch (Exception e) {
@@ -122,10 +117,9 @@ public class TransactionController {
     @Operation(summary = "Get transactions by account", description = "Retrieve transactions for a specific account")
     public ResponseEntity<ApiResponse<List<TransactionDTO>>> getTransactionsByAccount(
             @Parameter(description = "Account ID", example = "1")
-            @PathVariable Long accountId,
-            Authentication authentication) {
+            @PathVariable Long accountId) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             List<TransactionDTO> transactions = transactionService.getTransactionsByAccount(username, accountId);
             return ResponseEntity.ok(ApiResponse.success("Account transactions retrieved successfully", transactions));
         } catch (Exception e) {
@@ -136,11 +130,10 @@ public class TransactionController {
     @GetMapping("/spending")
     @Operation(summary = "Get spending by category", description = "Retrieve spending breakdown by category")
     public ResponseEntity<ApiResponse<Map<String, BigDecimal>>> getSpendingByCategory(
-            Authentication authentication,
             @Parameter(description = "Number of days to look back", example = "30")
             @RequestParam(defaultValue = "30") int days) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             Map<String, BigDecimal> categories = transactionService.getSpendingByCategory(username, days);
             return ResponseEntity.ok(ApiResponse.success("Spending by category retrieved successfully", categories));
         } catch (Exception e) {
@@ -151,11 +144,10 @@ public class TransactionController {
     @GetMapping("/summary")
     @Operation(summary = "Get transaction summary", description = "Retrieve transaction summary with spending breakdown")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getTransactionSummary(
-            Authentication authentication,
             @Parameter(description = "Number of days to look back", example = "30")
             @RequestParam(defaultValue = "30") int days) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             Map<String, Object> summary = transactionService.getTransactionSummary(username, days);
             return ResponseEntity.ok(ApiResponse.success("Transaction summary retrieved successfully", summary));
         } catch (Exception e) {
@@ -166,11 +158,10 @@ public class TransactionController {
     @GetMapping("/trends")
     @Operation(summary = "Get transaction trends", description = "Retrieve transaction trends over time")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getTransactionTrends(
-            Authentication authentication,
             @Parameter(description = "Number of months to analyze", example = "6")
             @RequestParam(defaultValue = "6") int months) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             Map<String, Object> trends = transactionService.getTransactionTrends(username, months);
             return ResponseEntity.ok(ApiResponse.success("Transaction trends retrieved successfully", trends));
         } catch (Exception e) {
@@ -181,11 +172,10 @@ public class TransactionController {
     @GetMapping("/monthly")
     @Operation(summary = "Get monthly analysis", description = "Retrieve monthly transaction analysis")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMonthlyAnalysis(
-            Authentication authentication,
             @Parameter(description = "Year to analyze", example = "2024")
             @RequestParam(defaultValue = "2024") int year) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             Map<String, Object> monthly = transactionService.getMonthlyAnalysis(username, year);
             return ResponseEntity.ok(ApiResponse.success("Monthly analysis retrieved successfully", monthly));
         } catch (Exception e) {
@@ -206,10 +196,9 @@ public class TransactionController {
     })
     public ResponseEntity<ApiResponse<TransactionDTO>> getTransactionById(
             @Parameter(description = "Transaction ID", example = "1")
-            @PathVariable Long transactionId,
-            Authentication authentication) {
+            @PathVariable Long transactionId) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             TransactionDTO transaction = transactionService.getTransactionById(username, transactionId);
             return ResponseEntity.ok(ApiResponse.success("Transaction retrieved successfully", transaction));
         } catch (Exception e) {
@@ -232,10 +221,9 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<TransactionDTO>> updateTransaction(
             @Parameter(description = "Transaction ID", example = "1")
             @PathVariable Long transactionId,
-            @Valid @RequestBody TransactionUpdateRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransactionUpdateRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             TransactionDTO transaction = transactionService.updateTransaction(username, transactionId, request);
             return ResponseEntity.ok(ApiResponse.success("Transaction updated successfully", transaction));
         } catch (Exception e) {
@@ -258,10 +246,9 @@ public class TransactionController {
     public ResponseEntity<ApiResponse<TransactionDTO>> patchTransaction(
             @Parameter(description = "Transaction ID", example = "1")
             @PathVariable Long transactionId,
-            @Valid @RequestBody TransactionUpdateRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody TransactionUpdateRequest request) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             TransactionDTO transaction = transactionService.patchTransaction(username, transactionId, request);
             return ResponseEntity.ok(ApiResponse.success("Transaction partially updated successfully", transaction));
         } catch (Exception e) {
@@ -282,12 +269,11 @@ public class TransactionController {
     })
     public ResponseEntity<ApiResponse<String>> deleteTransaction(
             @Parameter(description = "Transaction ID", example = "1")
-            @PathVariable Long transactionId,
-            Authentication authentication) {
+            @PathVariable Long transactionId) {
         try {
-            String username = authentication.getName();
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
             transactionService.deleteTransaction(username, transactionId);
-            return ResponseEntity.ok(ApiResponse.success("Transaction deleted successfully", "Transaction with ID " + transactionId + " has been deleted"));
+            return ResponseEntity.ok(ApiResponse.success("Transaction deleted successfully", "OK"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Failed to delete transaction: " + e.getMessage()));
         }
@@ -306,13 +292,11 @@ public class TransactionController {
     })
     public ResponseEntity<ApiResponse<String>> deleteTransactionsByAccount(
             @Parameter(description = "Account ID", example = "1")
-            @PathVariable Long accountId,
-            Authentication authentication) {
+            @PathVariable Long accountId) {
         try {
-            String username = authentication.getName();
-            int deletedCount = transactionService.deleteTransactionsByAccount(username, accountId);
-            return ResponseEntity.ok(ApiResponse.success("Account transactions deleted successfully", 
-                deletedCount + " transactions deleted for account " + accountId));
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            int deleted = transactionService.deleteTransactionsByAccount(username, accountId);
+            return ResponseEntity.ok(ApiResponse.success("Account transactions deleted successfully", String.valueOf(deleted)));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.error("Failed to delete account transactions: " + e.getMessage()));
         }

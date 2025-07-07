@@ -28,11 +28,20 @@ public class ValidationTest {
         User user = new User();
         user.setUsername("testuser");
         user.setEmail("test@example.com");
-        user.setPassword("password123");
+        user.setPassword("Password123!"); // Meets all requirements: uppercase, lowercase, digit, special char
         user.setFirstName("John");
         user.setLastName("Doe");
 
         Set<ConstraintViolation<User>> violations = validator.validate(user);
+        
+        // Print violations for debugging
+        if (!violations.isEmpty()) {
+            System.out.println("Validation violations found:");
+            for (ConstraintViolation<User> violation : violations) {
+                System.out.println("- " + violation.getPropertyPath() + ": " + violation.getMessage());
+            }
+        }
+        
         assertTrue(violations.isEmpty(), "Valid user should have no violations");
     }
 

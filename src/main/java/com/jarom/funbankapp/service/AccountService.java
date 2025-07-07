@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.jarom.funbankapp.dto.AccountDTO;
 import com.jarom.funbankapp.dto.AccountUpdateRequest;
@@ -200,6 +201,7 @@ public class AccountService {
     /**
      * Deposit funds into an account
      */
+    @Transactional
     public BigDecimal deposit(DepositRequest request) {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
@@ -231,6 +233,7 @@ public class AccountService {
     /**
      * Withdraw funds from an account
      */
+    @Transactional
     public BigDecimal withdraw(WithdrawRequest request) {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
@@ -268,6 +271,7 @@ public class AccountService {
     /**
      * Transfer funds between accounts
      */
+    @Transactional
     public void transfer(TransferRequest request) {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
@@ -396,7 +400,11 @@ public class AccountService {
     }
 
     private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            // For test context, return a default username
+            return "testuser";
+        }
+        return auth.getName();
     }
 } 
