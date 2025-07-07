@@ -72,7 +72,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-test]
     if: github.ref == 'refs/heads/main'
-    environment: production
     
     steps:
     - name: Checkout code
@@ -104,11 +103,18 @@ jobs:
         appdir: "."
         buildpack: "heroku/java"
         
+    - name: Set Heroku environment variables
+      run: |
+        heroku config:set DB_URL="${{ secrets.DB_URL }}" --app ${{ secrets.HEROKU_APP_NAME }}
+        heroku config:set DB_USERNAME="${{ secrets.DB_USERNAME }}" --app ${{ secrets.HEROKU_APP_NAME }}
+        heroku config:set DB_PASSWORD="${{ secrets.DB_PASSWORD }}" --app ${{ secrets.HEROKU_APP_NAME }}
+        heroku config:set DB_DRIVER="com.mysql.cj.jdbc.Driver" --app ${{ secrets.HEROKU_APP_NAME }}
+        
     - name: Run health checks
       run: |
         echo "Running health checks..."
-        # Add health check commands here
-        # Example: curl -f https://your-app-name.herokuapp.com/actuator/health
+        sleep 30
+        curl -f https://${{ secrets.HEROKU_APP_NAME }}.herokuapp.com/api/health
         
     - name: Notify deployment success
       if: success()
