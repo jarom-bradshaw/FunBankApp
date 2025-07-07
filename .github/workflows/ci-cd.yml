@@ -88,15 +88,14 @@ jobs:
       run: ./gradlew build -x test --no-daemon
       
     - name: Deploy to Heroku
-      uses: akhileshns/heroku-deploy@v3.12.14
-      with:
-        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
-        heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
-        heroku_email: ${{ secrets.HEROKU_EMAIL }}
-        appdir: "."
-        buildpack: "heroku/java"
-        dontuseforce: 1
-        branch: "main"
+      run: |
+        # Set up Heroku remote
+        heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+        
+        # Push to Heroku
+        git push heroku main:main
+      env:
+        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         
     - name: Set Heroku environment variables
       run: |
