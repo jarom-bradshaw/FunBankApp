@@ -92,8 +92,8 @@ jobs:
         # Debug: Check Heroku CLI installation
         heroku --version
         
-        # Login to Heroku
-        echo ${{ secrets.HEROKU_API_KEY }} | heroku login --username ${{ secrets.HEROKU_EMAIL }} --password-stdin
+        # Login to Heroku using API key
+        echo ${{ secrets.HEROKU_API_KEY }} | heroku login --password-stdin
         
         # Debug: Check if we can access the app
         heroku apps:info --app ${{ secrets.HEROKU_APP_NAME }}
