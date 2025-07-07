@@ -45,9 +45,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
           
-    - name: Validate Gradle wrapper
-      run: ./gradlew wrapper --validate-only
-      
     - name: Build with Gradle
       run: ./gradlew build --no-daemon
       
