@@ -1,135 +1,210 @@
-# Overview
+# FunBankApp Backend
 
-I have a strong passion for finance and aspire to work in the fintech industry. Recently, my brother, an architect for the state of Nevada, expressed interest in renting and building a 4-plex he designed. This inspired me to analyze the financial aspects of such an investment using a spreadsheet.
+A Spring Boot-based backend application for a personal finance management system with features including account management, transaction tracking, budgeting, goal setting, and AI-powered financial analysis.
 
-To take this further, I decided to develop a mini hybrid banking application. This app is designed to connect with real banks and provide a secure environment for user data. It includes features such as balance calculations and high-level summaries using APIs integrated with Ollama.
+## 🚀 Features
 
-I have implemented secure password hashing and created comprehensive Swagger documentation for the APIs I developed.
+- **User Authentication & Authorization** - Secure login/register with session management
+- **Account Management** - Create and manage multiple financial accounts
+- **Transaction Tracking** - Record and categorize financial transactions
+- **Budget Management** - Set up and track budgets by category
+- **Goal Setting** - Create and monitor financial goals
+- **AI Chat Assistant** - Get financial advice and insights
+- **Analytics Dashboard** - View financial reports and trends
+- **RESTful API** - Comprehensive API with OpenAPI documentation
 
-[Software Demo Video](https://youtu.be/hWKAgCgMUdQ)
+## 🛠️ Tech Stack
 
-# Setup Instructions
-
-## Prerequisites
-- Java 21 (Amazon Corretto recommended)
-- Gradle
-- MySQL server (or compatible database)
-
-## Backend Setup
-1. Clone the repository.
-2. Configure your database connection in `application.properties` (not included here; see Spring Boot docs).
-3. Run database migrations or create the required schema/tables.
-4. Build and run the backend:
-   ```sh
-   ./gradlew bootRun
-   ```
-5. Access Swagger UI at `http://localhost:8080/swagger-ui.html` for API docs and testing.
-
-## Running Tests
-```sh
-./gradlew test
-```
-
-# Features
-- User registration and login with JWT authentication
-- Secure password hashing (BCrypt)
-- Account creation, deposit, withdraw, and transfer endpoints
-- Transaction logging
-- API documentation via Swagger/OpenAPI
-- (Planned) Financial analysis using Ollama API
-
-# API Usage Examples
-
-## Register
-```
-POST /api/users/register
-{
-  "username": "alice",
-  "password": "password123"
-}
-```
-
-## Login
-```
-POST /api/users/login
-{
-  "username": "alice",
-  "password": "password123"
-}
-Response: Bearer <jwt-token>
-```
-
-## Get Accounts (Authenticated)
-```
-GET /api/accounts
-Authorization: Bearer <jwt-token>
-```
-
-## Deposit
-```
-POST /api/accounts/deposit
-Authorization: Bearer <jwt-token>
-{
-  "accountId": 1,
-  "amount": 100.00,
-  "description": "Initial deposit"
-}
-```
-
-## Withdraw
-```
-POST /api/accounts/withdraw
-Authorization: Bearer <jwt-token>
-{
-  "accountId": 1,
-  "amount": 50.00,
-  "description": "ATM withdrawal"
-}
-```
-
-## Transfer
-```
-POST /api/accounts/transfer
-Authorization: Bearer <jwt-token>
-{
-  "fromAccountId": 1,
-  "toAccountId": 2,
-  "amount": 25.00,
-  "description": "Transfer to savings"
-}
-```
-
-# Development Environment
-
-- **Database**: Hosted on my SQL server, using JDBC for database connectivity to ensure efficient runtime performance.
-- **Framework**: Java Spring Boot
-- **JDK**: Amazon Corretto 21
+- **Framework**: Spring Boot 3.4.4
+- **Language**: Java 21
+- **Database**: MySQL (Aiven Cloud)
+- **Security**: Spring Security with session-based authentication
 - **Build Tool**: Gradle
-- **Libraries**: Bean, Lombok, and others (to be documented)
+- **Documentation**: OpenAPI 3.0 (Swagger UI)
+- **Development**: Spring Boot DevTools
 
-# Key Features
+## 📋 Prerequisites
 
-- **Secure Authentication**: Implemented password hashing using BCrypt to ensure user data security.
-- **API Documentation**: Automated Swagger documentation for easy API reference and testing.
-- TODO: **Financial Analysis**: Integrated with Ollama API to perform financial calculations and provide summaries.
+- Java 21 or higher
+- Gradle 8.0 or higher
+- MySQL database (or Aiven Cloud MySQL)
+- Git
 
-# Useful Websites
+## 🔧 Installation & Setup
 
-- [How to hash user data and passwords](https://www.baeldung.com/spring-security-registration-password-encoding-bcrypt)
-- [How to set up JWT Authentication](https://www.javaguides.net/2024/01/spring-boot-security-jwt-tutorial.html)
-- [How to automate Swagger Documentation](https://swagger.io/docs/)
-- [Best Tips for Springboot Security (Bcrypt, etc.)](https://github.com/ZeroSTF/Spring-Security-Best-Practices)
+### 1. Clone the Repository
+```bash
+git clone <your-github-repo-url>
+cd FunBankApp/backend
+```
 
-# Future Work
+### 2. Database Setup
+The application is configured to use Aiven Cloud MySQL. If you need to set up a local database:
 
-Note: This product is in the making. I am currently only locally hosting it and will later push it to the cloud.
+1. Install MySQL
+2. Create a database named `funbankappv1`
+3. Update `application.properties` with your database credentials
 
-I have outlined future enhancements on a Trello board. As I am currently working on this project alone, I am seeking collaborators, especially those skilled in frontend development and graphic design. If interested, please reach out to me at jarombrads@gmail.com. I would love to work with you to bring this application to fruition.
+### 3. Configuration
+Create environment-specific configuration files:
 
-# Documentation
+```bash
+# Copy the main properties file
+cp src/main/resources/application.properties src/main/resources/application-dev.properties
 
-See the `docs/` directory for detailed documentation:
-- [Backend Setup & Usage](docs/backend.md)
-- [Frontend Setup & Usage](docs/frontend.md)
-- [Project Structure](docs/project-structure.md)
-- [Requirements & Prerequisites](docs/requirements.md)
+# Update with your local database settings
+```
+
+### 4. Run the Application
+```bash
+# Using Gradle wrapper
+./gradlew bootRun
+
+# Or using the Windows batch file
+.\gradlew.bat bootRun
+```
+
+The application will start on `http://localhost:8080`
+
+## 📚 API Documentation
+
+Once the application is running, you can access:
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
+- **Health Check**: http://localhost:8080/api/health
+
+## 🔐 Security
+
+### Authentication
+- Session-based authentication
+- Password encryption using BCrypt
+- CSRF protection (disabled in development)
+- CORS configuration for cross-origin requests
+
+### Endpoints
+- `/api/auth/register` - User registration
+- `/api/auth/login` - User login
+- `/api/auth/logout` - User logout
+- `/api/auth/profile` - Get/update user profile
+
+## 🗄️ Database Schema
+
+The application uses the following main entities:
+- **Users** - User accounts and authentication
+- **Accounts** - Financial accounts (checking, savings, etc.)
+- **Transactions** - Financial transactions with categories
+- **Budgets** - Budget categories and limits
+- **Goals** - Financial goals and progress
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+./gradlew test
+
+# Run tests with coverage
+./gradlew test jacocoTestReport
+```
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+./gradlew bootRun
+```
+
+### Production Build
+```bash
+./gradlew build
+java -jar build/libs/FunBankApp-0.0.1-SNAPSHOT.jar
+```
+
+### Docker (Coming Soon)
+```bash
+docker build -t funbankapp-backend .
+docker run -p 8080:8080 funbankapp-backend
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── main/
+│   ├── java/com/jarom/funbankapp/
+│   │   ├── config/          # Configuration classes
+│   │   ├── controller/      # REST controllers
+│   │   ├── dto/            # Data Transfer Objects
+│   │   ├── exception/      # Exception handling
+│   │   ├── model/          # Entity models
+│   │   ├── repository/     # Data access layer
+│   │   ├── security/       # Security configuration
+│   │   └── service/        # Business logic
+│   └── resources/
+│       ├── application.properties
+│       ├── static/         # Static resources
+│       └── templates/      # Template files
+└── test/                   # Test files
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+The following environment variables can be set:
+
+- `SPRING_DATASOURCE_URL` - Database connection URL
+- `SPRING_DATASOURCE_USERNAME` - Database username
+- `SPRING_DATASOURCE_PASSWORD` - Database password
+- `JWT_SECRET` - JWT signing secret
+- `SERVER_PORT` - Application port (default: 8080)
+
+### Application Properties
+Key configuration options in `application.properties`:
+
+```properties
+# Database
+spring.datasource.url=jdbc:mysql://your-db-host:port/database
+spring.datasource.username=your-username
+spring.datasource.password=your-password
+
+# Security
+jwt.secret=your-jwt-secret
+jwt.expiration=86400000
+
+# Server
+server.port=8080
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🐛 Known Issues
+
+See the [Issues](https://github.com/your-username/FunBankApp/issues) page for current bugs and feature requests.
+
+## 📞 Support
+
+For support, email support@funbankapp.com or create an issue in the GitHub repository.
+
+## 🔄 Changelog
+
+### Version 0.0.1-SNAPSHOT
+- Initial release
+- Basic authentication system
+- Account and transaction management
+- Budget and goal tracking
+- AI chat integration
+- Analytics dashboard
+
+---
+
+**Note**: This is a development version. For production use, ensure all security configurations are properly set up. 

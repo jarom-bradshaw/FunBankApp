@@ -10,7 +10,14 @@ FunBankApp uses a monorepo layout for both backend and frontend.
 - `.gitignore`, `README.md`, etc.
 
 ## Backend
-- `src/` — Java source and resources
+- `src/main/java/com/jarom/funbankapp/`
+  - `controller/` — REST controllers (AccountController.java, UserController.java)
+  - `service/` — Service classes (FinancialAnalysisService.java)
+  - `repository/` — Data access (AccountRepository.java, AccountDAO.java, TransactionDAO.java, UserDAO.java)
+  - `model/` — Entity/model classes (Account.java, Transaction.java, User.java, LoginRequest.java)
+  - `dto/` — Data Transfer Objects (TransferRequest.java, WithdrawRequest.java, DepositRequest.java)
+  - `security/` — Security config and filters (SecurityConfig.java, JwtAuthFilter.java, JwtService.java)
+  - `config/` — App/config classes (CorsConfig.java, JwtProperties.java)
 - `build.gradle`, `settings.gradle`, `gradlew*`, `gradle/` — Build tools
 
 ## Frontend
