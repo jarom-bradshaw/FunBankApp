@@ -1,145 +1,122 @@
 package com.jarom.funbankapp.service;
 
-import com.jarom.funbankapp.model.Transaction;
-import com.jarom.funbankapp.repository.TransactionRepository;
-import com.jarom.funbankapp.repository.UserRepository;
-import com.jarom.funbankapp.model.User;
-import com.jarom.funbankapp.exception.UnauthorizedException;
-import com.jarom.funbankapp.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
-@Service
-public class TransactionService {
+import com.jarom.funbankapp.dto.TransactionDTO;
+import com.jarom.funbankapp.dto.TransactionRequest;
+import com.jarom.funbankapp.dto.TransactionUpdateRequest;
+import com.jarom.funbankapp.dto.TransferRequest;
 
-    private final TransactionRepository transactionRepository;
-    private final UserRepository userRepository;
-
-    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository) {
-        this.transactionRepository = transactionRepository;
-        this.userRepository = userRepository;
-    }
-
-    /**
-     * Get all transactions for a user's accounts
-     */
-    public List<Transaction> getUserTransactions() {
-        String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
-        return transactionRepository.getRecentTransactions(user.getId(), 100); // Default limit
-    }
-
+/**
+ * Service layer for transaction operations
+ * Handles business logic and data transformation
+ */
+public interface TransactionService {
+    
     /**
      * Get recent transactions for a user
+     * @param username the username
+     * @param limit maximum number of transactions to return
+     * @return list of transaction DTOs
      */
-    public List<Transaction> getRecentTransactions(int limit) {
-        String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
-        // Validate limit
-        if (limit <= 0 || limit > 1000) {
-            limit = 10; // Default limit
-        }
-        
-        return transactionRepository.getRecentTransactions(user.getId(), limit);
-    }
+    List<TransactionDTO> getRecentTransactions(String username, int limit);
+    
+    /**
+     * Create a new transaction
+     * @param username the username
+     * @param request transaction request
+     * @return created transaction DTO
+     */
+    TransactionDTO createTransaction(String username, TransactionRequest request);
+    
+    /**
+     * Transfer funds between two accounts
+     * @param username the username
+     * @param request transfer request
+     * @return map containing both debit and credit transactions
+     */
+    Map<String, TransactionDTO> transferBetweenAccounts(String username, TransferRequest request);
+    
+    /**
+     * Get spending by category for a user
+     * @param username the username
+     * @param days number of days to look back
+     * @return map of category to total spending
+     */
+    Map<String, BigDecimal> getSpendingByCategory(String username, int days);
+    
+    /**
+     * Get transaction summary for a user
+     * @param username the username
+     * @param days number of days to look back
+     * @return transaction summary data
+     */
+    Map<String, Object> getTransactionSummary(String username, int days);
+    
+    /**
+     * Get transaction trends over time
+     * @param username the username
+     * @param months number of months to analyze
+     * @return transaction trends data
+     */
+    Map<String, Object> getTransactionTrends(String username, int months);
+    
+    /**
+     * Get monthly transaction analysis
+     * @param username the username
+     * @param year year to analyze
+     * @return monthly analysis data
+     */
+    Map<String, Object> getMonthlyAnalysis(String username, int year);
+    
+    /**
+     * Get transactions by account ID
+     * @param username the username
+     * @param accountId the account ID
+     * @return list of transaction DTOs
+     */
+    List<TransactionDTO> getTransactionsByAccount(String username, Long accountId);
 
     /**
-     * Get transactions for a specific account (if user owns it)
+     * Update an existing transaction with complete data
+     * @param username the username
+     * @param transactionId the transaction ID
+     * @param request update request with all fields
+     * @return updated transaction DTO
      */
-    public List<Transaction> getAccountTransactions(Long accountId) {
-        String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
-        // TODO: Add account ownership validation
-        // This would require AccountRepository injection to verify ownership
-        
-        return transactionRepository.findByAccountId(accountId);
-    }
+    TransactionDTO updateTransaction(String username, Long transactionId, TransactionUpdateRequest request);
 
     /**
-     * Import transactions for a user
+     * Partially update an existing transaction
+     * @param username the username
+     * @param transactionId the transaction ID
+     * @param request update request with only fields to update
+     * @return updated transaction DTO
      */
-    public int importTransactions(List<Transaction> transactions) {
-        String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
-        // Validate and sanitize transactions
-        int importedCount = 0;
-        for (Transaction transaction : transactions) {
-            // Validate transaction data
-            if (isValidTransaction(transaction)) {
-                transaction.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-                
-                // TODO: Add account ownership validation
-                int result = transactionRepository.logTransaction(
-                    transaction.getAccountId(),
-                    transaction.getType(),
-                    transaction.getAmount(),
-                    transaction.getDescription()
-                );
-                if (result > 0) {
-                    importedCount++;
-                }
-            }
-        }
-        
-        return importedCount;
-    }
+    TransactionDTO patchTransaction(String username, Long transactionId, TransactionUpdateRequest request);
 
     /**
-     * Get spending analysis by category
+     * Get a specific transaction by ID
+     * @param username the username
+     * @param transactionId the transaction ID
+     * @return transaction DTO
      */
-    public Map<String, BigDecimal> getSpendingByCategory(int days) {
-        String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
-        // Validate days parameter
-        if (days <= 0 || days > 365) {
-            days = 30; // Default to 30 days
-        }
-        
-        return transactionRepository.getSpendingByCategory(user.getId(), days);
-    }
+    TransactionDTO getTransactionById(String username, Long transactionId);
 
     /**
-     * Get transaction categories
+     * Delete a specific transaction
+     * @param username the username
+     * @param transactionId the transaction ID
      */
-    public Map<String, BigDecimal> getTransactionCategories(int days) {
-        return getSpendingByCategory(days);
-    }
+    void deleteTransaction(String username, Long transactionId);
 
-    // Private helper methods
-
-    private boolean isValidTransaction(Transaction transaction) {
-        return transaction != null &&
-               transaction.getAccountId() != null &&
-               transaction.getType() != null &&
-               transaction.getAmount() != null &&
-               transaction.getAmount().compareTo(BigDecimal.ZERO) > 0 &&
-               isValidTransactionType(transaction.getType());
-    }
-
-    private boolean isValidTransactionType(String type) {
-        return "deposit".equals(type) || 
-               "withdraw".equals(type) || 
-               "transfer".equals(type);
-    }
-
-    private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
-    }
+    /**
+     * Delete all transactions for a specific account
+     * @param username the username
+     * @param accountId the account ID
+     * @return number of transactions deleted
+     */
+    int deleteTransactionsByAccount(String username, Long accountId);
 } 

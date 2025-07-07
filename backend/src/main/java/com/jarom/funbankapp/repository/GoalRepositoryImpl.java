@@ -88,6 +88,12 @@ public class GoalRepositoryImpl implements GoalRepository {
     }
 
     @Override
+    public int deleteByUserId(Long userId) {
+        String sql = "DELETE FROM goals WHERE user_id = ?";
+        return jdbcTemplate.update(sql, userId);
+    }
+
+    @Override
     public void updateCurrentAmount(Long goalId, BigDecimal currentAmount) {
         String sql = "UPDATE goals SET current_amount = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, currentAmount, new Timestamp(System.currentTimeMillis()), goalId);

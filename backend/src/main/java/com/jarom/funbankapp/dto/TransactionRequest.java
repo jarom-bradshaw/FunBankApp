@@ -12,11 +12,10 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * Data Transfer Object for Transaction operations
- * Used for API requests and responses to avoid infinite recursion
+ * Request DTO for creating transactions
+ * Used for API requests to avoid infinite recursion
  */
-public class TransactionDTO {
-    private Long id;
+public class TransactionRequest {
     
     @NotNull(message = "Account ID is required")
     @Positive(message = "Account ID must be positive")
@@ -38,26 +37,29 @@ public class TransactionDTO {
     private String description;
     
     private Timestamp transactionDate;
-    private Timestamp createdAt;
     
     // Constructors
-    public TransactionDTO() {}
+    public TransactionRequest() {}
     
-    public TransactionDTO(Long id, Long accountId, String type, BigDecimal amount, String category, String description, Timestamp transactionDate, Timestamp createdAt) {
-        this.id = id;
+    public TransactionRequest(Long accountId, String type, BigDecimal amount, String category, String description) {
+        this.accountId = accountId;
+        this.type = type;
+        this.amount = amount;
+        this.category = category;
+        this.description = description;
+        this.transactionDate = new Timestamp(System.currentTimeMillis());
+    }
+    
+    public TransactionRequest(Long accountId, String type, BigDecimal amount, String category, String description, Timestamp transactionDate) {
         this.accountId = accountId;
         this.type = type;
         this.amount = amount;
         this.category = category;
         this.description = description;
         this.transactionDate = transactionDate;
-        this.createdAt = createdAt;
     }
     
     // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
     public Long getAccountId() { return accountId; }
     public void setAccountId(Long accountId) { this.accountId = accountId; }
     
@@ -75,7 +77,4 @@ public class TransactionDTO {
     
     public Timestamp getTransactionDate() { return transactionDate; }
     public void setTransactionDate(Timestamp transactionDate) { this.transactionDate = transactionDate; }
-    
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 } 

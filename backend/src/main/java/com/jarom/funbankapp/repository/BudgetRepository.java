@@ -1,9 +1,10 @@
 package com.jarom.funbankapp.repository;
 
-import com.jarom.funbankapp.model.Budget;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import com.jarom.funbankapp.model.Budget;
 
 public interface BudgetRepository {
     
@@ -20,4 +21,5 @@ public interface BudgetRepository {
     
     // Delete operations
     void deleteBudget(Long budgetId);
+    int deleteByUserId(Long userId);
 } 

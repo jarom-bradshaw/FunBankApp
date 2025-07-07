@@ -1,14 +1,15 @@
 package com.jarom.funbankapp.repository;
 
-import com.jarom.funbankapp.model.Budget;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+
+import com.jarom.funbankapp.model.Budget;
 
 @Repository
 public class BudgetRepositoryImpl implements BudgetRepository {
@@ -26,8 +27,9 @@ public class BudgetRepositoryImpl implements BudgetRepository {
         budget.setName(rs.getString("name"));
         budget.setCategory(rs.getString("category"));
         budget.setAmount(rs.getBigDecimal("amount"));
-        budget.setSpent(rs.getBigDecimal("spent"));
+        budget.setSpent(rs.getBigDecimal("spent") != null ? rs.getBigDecimal("spent") : BigDecimal.ZERO);
         budget.setPeriod(rs.getString("period"));
+        budget.setDescription(rs.getString("description"));
         budget.setStartDate(rs.getTimestamp("start_date"));
         budget.setEndDate(rs.getTimestamp("end_date"));
         budget.setCreatedAt(rs.getTimestamp("created_at"));
@@ -37,13 +39,14 @@ public class BudgetRepositoryImpl implements BudgetRepository {
 
     @Override
     public void createBudget(Budget budget) {
-        String sql = "INSERT INTO budgets (user_id, name, category, amount, period, start_date, end_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO budgets (user_id, name, category, amount, period, description, start_date, end_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.update(sql,
                 budget.getUserId(),
                 budget.getName(),
                 budget.getCategory(),
                 budget.getAmount(),
                 budget.getPeriod(),
+                budget.getDescription(),
                 budget.getStartDate(),
                 budget.getEndDate(),
                 new Timestamp(System.currentTimeMillis()),
@@ -66,12 +69,13 @@ public class BudgetRepositoryImpl implements BudgetRepository {
 
     @Override
     public void updateBudget(Budget budget) {
-        String sql = "UPDATE budgets SET name = ?, category = ?, amount = ?, period = ?, start_date = ?, end_date = ?, updated_at = ? WHERE id = ?";
+        String sql = "UPDATE budgets SET name = ?, category = ?, amount = ?, period = ?, description = ?, start_date = ?, end_date = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql,
                 budget.getName(),
                 budget.getCategory(),
                 budget.getAmount(),
                 budget.getPeriod(),
+                budget.getDescription(),
                 budget.getStartDate(),
                 budget.getEndDate(),
                 new Timestamp(System.currentTimeMillis()),
@@ -89,5 +93,11 @@ public class BudgetRepositoryImpl implements BudgetRepository {
     public void updateSpent(Long budgetId, BigDecimal spent) {
         String sql = "UPDATE budgets SET spent = ?, updated_at = ? WHERE id = ?";
         jdbcTemplate.update(sql, spent, new Timestamp(System.currentTimeMillis()), budgetId);
+    }
+
+    @Override
+    public int deleteByUserId(Long userId) {
+        String sql = "DELETE FROM budgets WHERE user_id = ?";
+        return jdbcTemplate.update(sql, userId);
     }
 } 

@@ -1,4 +1,28 @@
-# GitHub Issues to Create for FunBankApp Backend
+# GitHub Issues
+
+## New Feature Requests
+
+### 1. Front-Facing Marketing Website
+- Create a public-facing website to market FunBankApp.
+- Include product features, pricing, and signup links.
+- Add a blog section with articles on using the product and saving money.
+
+### 2. Blog with Comments
+- Add a blog system to the marketing site.
+- Allow users with accounts to comment on blog posts (future feature).
+
+### 3. Free Tier and Pro Tier
+- Implement a free tier with basic features.
+- Implement a pro tier with advanced features (e.g., analytics, investment tools).
+- Add pricing and upgrade/downgrade logic.
+
+### 4. Monte Carlo Investment Tools
+- Add Monte Carlo simulation tools for investment planning.
+- Integrate with user accounts and analytics.
+
+---
+
+(These issues should be tracked and broken down further as development progresses.)
 
 ## 🔴 Critical Security Issues
 
@@ -42,63 +66,14 @@ JWT signing secret is hardcoded in the application properties file, making it vu
 
 ---
 
-### Issue #3: Overly Permissive CORS Configuration
-**Title**: [SECURITY] CORS configuration allows all origins
-**Labels**: security, high-priority
-**Description**: 
-CORS configuration in `CorsConfig.java` allows all origins with `*` pattern, which is too permissive for production.
-
-**Impact**: 
-- Potential cross-origin attacks
-- Security vulnerabilities in production
-- Violation of security best practices
-
-**Solution**: 
-- Restrict allowed origins to specific domains
-- Implement proper CORS policies
-- Use environment-specific configurations
-
-**Files Affected**: `src/main/java/com/jarom/funbankapp/config/CorsConfig.java`
+## Issue: Weak Password Validation (Addressed)
+- [x] Passwords now require at least 8 characters, one uppercase, one lowercase, one digit, and one special character.
 
 ---
 
-### Issue #4: Weak Password Validation
-**Title**: [SECURITY] Password validation only requires 6 characters
-**Labels**: security, medium-priority
-**Description**: 
-Password validation in `UserService.java` only requires 6 characters minimum, which is insufficient for security.
-
-**Impact**: 
-- Weak passwords increase security risk
-- Potential brute force attacks
-- User account compromise
-
-**Solution**: 
-- Implement stronger password requirements
-- Add complexity requirements (uppercase, lowercase, numbers, symbols)
-- Consider password strength indicators
-
-**Files Affected**: `src/main/java/com/jarom/funbankapp/service/UserService.java`
-
----
-
-### Issue #5: Missing Rate Limiting
-**Title**: [SECURITY] Authentication endpoints lack rate limiting
-**Labels**: security, medium-priority
-**Description**: 
-Authentication endpoints (`/api/auth/login`, `/api/auth/register`) do not have rate limiting, making them vulnerable to brute force attacks.
-
-**Impact**: 
-- Brute force attacks on login
-- Account enumeration attacks
-- Potential DoS attacks
-
-**Solution**: 
-- Implement rate limiting for auth endpoints
-- Use Spring Security rate limiting
-- Add CAPTCHA for repeated failures
-
-**Files Affected**: `src/main/java/com/jarom/funbankapp/security/SecurityConfig.java`
+## Issue: Rate Limiting for Auth Endpoints (Addressed)
+- [x] Rate limiting (5 requests/min/IP) added to /api/auth/login and /api/auth/register.
+- [ ] Automated tests fail due to user already existing, not due to rate limiting.
 
 ---
 
@@ -507,3 +482,42 @@ Create these labels in your GitHub repository:
 - `api-design` (green) - API design improvements
 - `monitoring` (blue) - Monitoring and observability
 - `configuration` (gray) - Configuration management 
+
+---
+
+## Issue: Hardcoded Database Credentials and JWT Secret (Addressed)
+- [x] Removed hardcoded DB credentials and JWT secret from application.properties. Now only environment variables are used.
+- [ ] Ensure environment variables are set in deployment environments.
+
+---
+
+## Issue: Automated Test Suite and Transfer Functionality Blockers
+
+### Description
+- The automated test suite fails at the authentication step (login/registration) with a 400 Bad Request, even though manual registration via debug script works.
+- The test suite attempts login, then registration if login fails, but both fail in the suite context.
+- There are also compilation errors in `AccountService.java` related to missing `getFromAccountId()` and `getToAccountId()` methods on `TransferRequest`.
+
+### Error Details
+- **Test Suite Output:**
+  - FAIL User Login: Login failed, attempting registration
+  - FAIL User Registration: Request failed (400 Bad Request)
+- **Manual debug script:** Registration endpoint works and returns a token.
+- **Build Output:**
+  - Compilation errors in `AccountService.java`:
+    - Cannot find symbol: method `getFromAccountId()` or `getToAccountId()` on `TransferRequest`.
+
+### Steps to Reproduce
+1. Run `./automated_test_suite.ps1` in the backend directory.
+2. Observe failures at authentication step.
+3. Attempt to build the backend with `./gradlew bootRun` and observe compilation errors.
+
+### What Needs to Be Fixed
+- Investigate why the test suite cannot register/login users while manual requests work.
+- Fix the `TransferRequest` class to include `getFromAccountId()` and `getToAccountId()` methods, or update usages in `AccountService.java` to match the actual field names.
+- Ensure all endpoints and test scripts are in sync with the backend API contract.
+
+### Priority
+- **High**: Blocks all automated and CI testing, and transfer feature is broken due to compilation errors.
+
+--- 

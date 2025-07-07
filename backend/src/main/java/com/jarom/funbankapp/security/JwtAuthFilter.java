@@ -10,10 +10,12 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.lang.NonNull;
+import org.springframework.core.annotation.Order;
 
 import java.io.IOException;
 import java.util.Collections;
 
+@Order(1)
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 

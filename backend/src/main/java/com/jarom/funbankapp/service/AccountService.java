@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.jarom.funbankapp.dto.AccountDTO;
+import com.jarom.funbankapp.dto.AccountUpdateRequest;
 import com.jarom.funbankapp.dto.DepositRequest;
 import com.jarom.funbankapp.dto.TransferRequest;
 import com.jarom.funbankapp.dto.WithdrawRequest;
@@ -138,6 +139,39 @@ public class AccountService {
         accountRepository.updateAccount(account);
         
         return convertToDTO(account);
+    }
+
+    /**
+     * Patch an account (if user owns it) - partial update
+     */
+    public void patchAccount(Long accountId, AccountUpdateRequest accountUpdateRequest) {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
+        
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException("Account", "id", accountId));
+        
+        if (!account.getUserId().equals(user.getId())) {
+            throw new UnauthorizedException("You don't own this account");
+        }
+        
+        // Apply partial updates
+        if (accountUpdateRequest.getName() != null) {
+            account.setName(sanitizeAccountName(accountUpdateRequest.getName()));
+        }
+        if (accountUpdateRequest.getAccountType() != null) {
+            validateAccountType(AccountDTO.AccountType.valueOf(accountUpdateRequest.getAccountType().toUpperCase()));
+            account.setAccountType(accountUpdateRequest.getAccountType().toLowerCase());
+        }
+        if (accountUpdateRequest.getColor() != null) {
+            account.setColor(accountUpdateRequest.getColor());
+        }
+        
+        account.setUpdatedAt(Timestamp.valueOf(LocalDateTime.now()));
+        
+        // Save to database
+        accountRepository.updateAccount(account);
     }
 
     /**

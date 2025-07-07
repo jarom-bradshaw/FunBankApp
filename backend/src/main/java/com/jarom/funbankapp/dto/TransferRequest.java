@@ -1,33 +1,84 @@
 package com.jarom.funbankapp.dto;
 
 import java.math.BigDecimal;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
-@Schema(description = "Request object for transferring funds between accounts")
 public class TransferRequest {
+    @NotNull(message = "Source account ID is required")
+    private Long sourceAccountId;
     
-    @Schema(description = "ID of the source account to transfer from", example = "1", required = true)
-    private Long fromAccountId;
+    @NotNull(message = "Destination account ID is required")
+    private Long destinationAccountId;
     
-    @Schema(description = "ID of the destination account to transfer to", example = "2", required = true)
-    private Long toAccountId;
-    
-    @Schema(description = "Amount to transfer", example = "75.00", required = true, minimum = "0.01")
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
     
-    @Schema(description = "Optional description for the transfer", example = "Transfer to savings", required = false)
+    @Size(max = 255, message = "Description must be less than 255 characters")
     private String description;
+    
+    @Size(max = 50, message = "Category must be less than 50 characters")
+    private String category;
 
-    // Getters
-    public Long getFromAccountId() { return fromAccountId; }
-    public Long getToAccountId() { return toAccountId; }
-    public BigDecimal getAmount() { return amount; }
-    public String getDescription() { return description; }
+    // Default constructor
+    public TransferRequest() {}
 
-    // Setters
-    public void setFromAccountId(Long fromAccountId) { this.fromAccountId = fromAccountId; }
-    public void setToAccountId(Long toAccountId) { this.toAccountId = toAccountId; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-    public void setDescription(String description) { this.description = description; }
+    // Constructor with required fields
+    public TransferRequest(Long sourceAccountId, Long destinationAccountId, BigDecimal amount) {
+        this.sourceAccountId = sourceAccountId;
+        this.destinationAccountId = destinationAccountId;
+        this.amount = amount;
+    }
+
+    // Getters and Setters
+    public Long getSourceAccountId() {
+        return sourceAccountId;
+    }
+
+    public void setSourceAccountId(Long sourceAccountId) {
+        this.sourceAccountId = sourceAccountId;
+    }
+
+    public Long getDestinationAccountId() {
+        return destinationAccountId;
+    }
+
+    public void setDestinationAccountId(Long destinationAccountId) {
+        this.destinationAccountId = destinationAccountId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    // Alias methods for compatibility with AccountService
+    public Long getFromAccountId() {
+        return sourceAccountId;
+    }
+
+    public Long getToAccountId() {
+        return destinationAccountId;
+    }
 }

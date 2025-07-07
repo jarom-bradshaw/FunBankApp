@@ -14,11 +14,19 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         
-        // Allow requests from your frontend origin
-        config.addAllowedOrigin("http://localhost:3000"); // React default port
-        config.addAllowedOrigin("http://localhost:5173"); // Vite default port
-        config.addAllowedOrigin("http://localhost:5174"); // Vite default port
-        config.addAllowedOrigin("http://localhost:5175"); // Vite default port
+        // Restrict CORS origins for production
+        String allowedOrigins = System.getenv("ALLOWED_ORIGINS");
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            for (String origin : allowedOrigins.split(",")) {
+                config.addAllowedOrigin(origin.trim());
+            }
+        } else {
+            // Default to localhost for development
+            config.addAllowedOrigin("http://localhost:3000"); // React default port
+            config.addAllowedOrigin("http://localhost:5173"); // Vite default port
+            config.addAllowedOrigin("http://localhost:5174"); // Vite default port
+            config.addAllowedOrigin("http://localhost:5175"); // Vite default port
+        }
 
 
         // Allow common HTTP methods

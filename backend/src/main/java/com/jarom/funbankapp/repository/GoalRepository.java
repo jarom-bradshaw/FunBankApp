@@ -1,9 +1,10 @@
 package com.jarom.funbankapp.repository;
 
-import com.jarom.funbankapp.model.Goal;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+
+import com.jarom.funbankapp.model.Goal;
 
 public interface GoalRepository {
     
@@ -20,4 +21,5 @@ public interface GoalRepository {
     
     // Delete operations
     void deleteGoal(Long goalId);
+    int deleteByUserId(Long userId);
 } 

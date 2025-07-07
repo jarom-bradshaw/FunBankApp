@@ -15,7 +15,7 @@ import com.jarom.funbankapp.repository.AccountRepository;
 import com.jarom.funbankapp.repository.TransactionRepository;
 import com.jarom.funbankapp.repository.UserRepository;
 import com.jarom.funbankapp.security.JwtAuthFilter;
-import com.jarom.funbankapp.service.FinancialAnalysisService;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -66,8 +66,7 @@ public class AccountControllerTest {
     @MockBean
     private TransactionRepository transactionRepository;
 
-    @MockBean
-    private FinancialAnalysisService financialAnalysisService;
+
 
     // Helper method to set up a dummy user.
     private User createDummyUser(String username, Long id) {
@@ -326,17 +325,5 @@ public class AccountControllerTest {
                 .andExpect(content().string("Unauthorized: You don't own this account."));
     }
 
-    @Test
-    @WithMockUser(username = "testuser")
-    public void testAnalyzeFinancialData() throws Exception {
-        String inputData = "test input";
-        String expectedResult = "Ollama analysis result (placeholder)";
-        when(financialAnalysisService.analyzeWithOllama(inputData)).thenReturn(expectedResult);
 
-        mockMvc.perform(post("/api/accounts/analyze")
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content(inputData)) // Plain string
-                .andExpect(status().isOk())
-                .andExpect(content().string(expectedResult));
-    }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -58,6 +59,12 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
+    public void deleteUser(Long userId) {
+        String sql = "DELETE FROM users WHERE id = ?";
+        jdbcTemplate.update(sql, userId);
+    }
+
+    @Override
     public Optional<User> findByUsername(String username) {
         try {
             String sql = "SELECT id, username, email, password_hash FROM users WHERE username = ?";
@@ -70,18 +77,27 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public Optional<User> findByEmail(String email) {
-        try {
-            String sql = "SELECT id, username, email, password_hash FROM users WHERE email = ?";
-            User user = jdbcTemplate.queryForObject(sql, userRowMapper, email);
-            return Optional.ofNullable(user);
-        } catch (Exception e) {
-            return Optional.empty();
-        }
+        String sql = "SELECT * FROM users WHERE email = ?";
+        List<User> results = jdbcTemplate.query(sql, userRowMapper, email);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        String sql = "SELECT * FROM users WHERE id = ?";
+        List<User> results = jdbcTemplate.query(sql, userRowMapper, id);
+        return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
 
     @Override
     public void updateUser(User user) {
-        String sql = "UPDATE users SET email = ?, password_hash = ? WHERE username = ?";
-        jdbcTemplate.update(sql, user.getEmail(), user.getPassword(), user.getUsername());
+        String sql = "UPDATE users SET username = ?, email = ?, first_name = ?, last_name = ? WHERE id = ?";
+        jdbcTemplate.update(sql,
+                user.getUsername(),
+                user.getEmail(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getId()
+        );
     }
 } 
