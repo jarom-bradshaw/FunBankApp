@@ -89,8 +89,20 @@ jobs:
       
     - name: Deploy to Heroku
       run: |
+        # Debug: Check Heroku CLI installation
+        heroku --version
+        
+        # Login to Heroku
+        echo ${{ secrets.HEROKU_API_KEY }} | heroku login --username ${{ secrets.HEROKU_EMAIL }} --password-stdin
+        
+        # Debug: Check if we can access the app
+        heroku apps:info --app ${{ secrets.HEROKU_APP_NAME }}
+        
         # Set up Heroku remote
         heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
+        
+        # Debug: Check Git remotes
+        git remote -v
         
         # Push to Heroku
         git push heroku main:main
