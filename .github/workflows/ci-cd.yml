@@ -80,6 +80,10 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
         
+    - name: Install Heroku CLI
+      run: |
+        curl https://cli-assets.heroku.com/install.sh | sh
+
     - name: Build application
       run: ./gradlew build -x test --no-daemon
       
