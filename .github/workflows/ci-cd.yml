@@ -33,7 +33,7 @@ jobs:
         gradle-version: ${{ env.GRADLE_VERSION }}
         
     - name: Cache Gradle packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -52,7 +52,7 @@ jobs:
       run: ./gradlew test --no-daemon
       
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
@@ -60,7 +60,7 @@ jobs:
         retention-days: 30
         
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
         path: build/libs/
