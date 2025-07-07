@@ -1,5 +1,6 @@
 name: FunBankApp Backend CI/CD
 
+# Trigger on push to main and develop branches
 on:
   push:
     branches: [ main, develop ]
