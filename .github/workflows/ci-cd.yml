@@ -32,6 +32,9 @@ jobs:
       with:
         gradle-version: ${{ env.GRADLE_VERSION }}
         
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+        
     - name: Cache Gradle packages
       uses: actions/cache@v4
       with:
@@ -88,6 +91,9 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: ${{ env.GRADLE_VERSION }}
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
         
     - name: Build application
       run: ./gradlew build -x test --no-daemon
