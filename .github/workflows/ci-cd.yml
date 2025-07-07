@@ -45,7 +45,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
           
-    - name: Build with Gradle (skip tests)
+    - name: Install Heroku CLI
+      run: |
+        curl https://cli-assets.heroku.com/install.sh | sh
+
+    - name: Build application
       run: ./gradlew build -x test --no-daemon
       
     - name: Upload build artifacts
@@ -80,34 +84,12 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
         
-    - name: Install Heroku CLI
-      run: |
-        curl https://cli-assets.heroku.com/install.sh | sh
-
-    - name: Build application
-      run: ./gradlew build -x test --no-daemon
-      
     - name: Deploy to Heroku
-      run: |
-        # Debug: Check Heroku CLI installation
-        heroku --version
-        
-        # Login to Heroku using API key
-        echo ${{ secrets.HEROKU_API_KEY }} | heroku login --password-stdin
-        
-        # Debug: Check if we can access the app
-        heroku apps:info --app ${{ secrets.HEROKU_APP_NAME }}
-        
-        # Set up Heroku remote
-        heroku git:remote -a ${{ secrets.HEROKU_APP_NAME }}
-        
-        # Debug: Check Git remotes
-        git remote -v
-        
-        # Push to Heroku
-        git push heroku main:main
-      env:
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+      uses: akhileshns/heroku-deploy@v3.12.14
+      with:
+        heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+        heroku_app_name: ${{ secrets.HEROKU_APP_NAME }}
+        heroku_email: ${{ secrets.HEROKU_EMAIL }}
         
     - name: Set Heroku environment variables
       run: |
