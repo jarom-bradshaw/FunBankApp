@@ -45,8 +45,3 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
-
-// Build task dependencies - commented out until plugins are added
-// build.dependsOn jacocoTestReport
-// build.dependsOn spotbugsMain
-// build.dependsOn checkstyleMain
