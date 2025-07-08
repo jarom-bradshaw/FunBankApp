@@ -1,0 +1,21 @@
+{
+  "exportType" : "goals",
+  "userId" : 1,
+  "generatedAt" : "2025-07-07T20:16:08.9773723",
+  "format" : "json",
+  "goals" : [ {
+    "name" : "Emergency Fund",
+    "targetAmount" : 10000.0,
+    "currentAmount" : 7500.0,
+    "progress" : 75.0,
+    "targetDate" : "2024-12-31",
+    "status" : "In Progress"
+  }, {
+    "name" : "Vacation Fund",
+    "targetAmount" : 5000.0,
+    "currentAmount" : 3000.0,
+    "progress" : 60.0,
+    "targetDate" : "2024-06-30",
+    "status" : "In Progress"
+  } ]
+}

@@ -48,10 +48,10 @@ jobs:
     - name: Install Heroku CLI
       run: |
         curl https://cli-assets.heroku.com/install.sh | sh
-
+      
     - name: Build application
       run: ./gradlew build -x test --no-daemon
-      
+        
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -83,7 +83,7 @@ jobs:
         
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-        
+      
     - name: Deploy to Heroku
       uses: akhileshns/heroku-deploy@v3.12.14
       with:
