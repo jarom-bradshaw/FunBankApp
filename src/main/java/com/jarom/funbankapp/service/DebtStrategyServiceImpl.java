@@ -2,7 +2,6 @@ package com.jarom.funbankapp.service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -200,15 +199,21 @@ public class DebtStrategyServiceImpl implements DebtStrategyService {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
         List<Debt> debts = debtRepository.findByUserId(user.getId());
-        
+        // Filter out debts with nulls in critical fields
+        List<Debt> validDebts = debts.stream()
+            .filter(d -> d.getCurrentBalance() != null && d.getInterestRate() != null && d.getMinimumPayment() != null && d.getPriority() != null)
+            .toList();
+        if (validDebts.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "No valid debts to generate snowball strategy.");
+            return result;
+        }
         // Sort by balance (lowest first) for snowball method
-        List<Debt> sortedDebts = debts.stream()
-                .filter(debt -> debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
+        List<Debt> sortedDebts = validDebts.stream()
+                .filter(debt -> debt.getCurrentBalance() != null && debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
                 .sorted(Comparator.comparing(Debt::getCurrentBalance))
                 .collect(Collectors.toList());
-        
         Map<String, Object> strategy = new HashMap<>();
         strategy.put("strategyType", "snowball");
         strategy.put("description", "Pay off debts starting with the smallest balance first");
@@ -217,7 +222,6 @@ public class DebtStrategyServiceImpl implements DebtStrategyService {
         strategy.put("totalBalance", sortedDebts.stream()
                 .map(Debt::getCurrentBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
-        
         return strategy;
     }
 
@@ -226,15 +230,21 @@ public class DebtStrategyServiceImpl implements DebtStrategyService {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
         List<Debt> debts = debtRepository.findByUserId(user.getId());
-        
+        // Filter out debts with nulls in critical fields
+        List<Debt> validDebts = debts.stream()
+            .filter(d -> d.getCurrentBalance() != null && d.getInterestRate() != null && d.getMinimumPayment() != null && d.getPriority() != null)
+            .toList();
+        if (validDebts.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "No valid debts to generate avalanche strategy.");
+            return result;
+        }
         // Sort by interest rate (highest first) for avalanche method
-        List<Debt> sortedDebts = debts.stream()
-                .filter(debt -> debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
+        List<Debt> sortedDebts = validDebts.stream()
+                .filter(debt -> debt.getCurrentBalance() != null && debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0 && debt.getInterestRate() != null)
                 .sorted(Comparator.comparing(Debt::getInterestRate).reversed())
                 .collect(Collectors.toList());
-        
         Map<String, Object> strategy = new HashMap<>();
         strategy.put("strategyType", "avalanche");
         strategy.put("description", "Pay off debts starting with the highest interest rate first");
@@ -243,7 +253,6 @@ public class DebtStrategyServiceImpl implements DebtStrategyService {
         strategy.put("totalBalance", sortedDebts.stream()
                 .map(Debt::getCurrentBalance)
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
-        
         return strategy;
     }
 
@@ -291,36 +300,57 @@ public class DebtStrategyServiceImpl implements DebtStrategyService {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        
         List<Debt> debts = debtRepository.findByUserId(user.getId());
-        
+        // Filter out debts with nulls in critical fields
+        List<Debt> validDebts = debts.stream()
+            .filter(d -> d.getCurrentBalance() != null && d.getInterestRate() != null && d.getMinimumPayment() != null && d.getPriority() != null)
+            .toList();
+        if (validDebts.isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", "No valid debts to compare strategies.");
+            return result;
+        }
+        // Use validDebts for strategy generation
+        Map<String, Object> snowball = generateSnowballStrategy(validDebts);
+        Map<String, Object> avalanche = generateAvalancheStrategy(validDebts);
         Map<String, Object> comparison = new HashMap<>();
-        
-        // Snowball strategy analysis
-        List<Debt> snowballOrder = debts.stream()
-                .filter(debt -> debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
+        comparison.put("snowball", snowball);
+        comparison.put("avalanche", avalanche);
+        return comparison;
+    }
+
+    // Overload strategy methods to accept debts list
+    public Map<String, Object> generateSnowballStrategy(List<Debt> debts) {
+        // Sort by balance (lowest first) for snowball method
+        List<Debt> sortedDebts = debts.stream()
+                .filter(debt -> debt.getCurrentBalance() != null && debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
                 .sorted(Comparator.comparing(Debt::getCurrentBalance))
                 .collect(Collectors.toList());
-        
-        // Avalanche strategy analysis
-        List<Debt> avalancheOrder = debts.stream()
-                .filter(debt -> debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0)
+        Map<String, Object> strategy = new HashMap<>();
+        strategy.put("strategyType", "snowball");
+        strategy.put("description", "Pay off debts starting with the smallest balance first");
+        strategy.put("debtOrder", sortedDebts.stream().map(Debt::getId).collect(Collectors.toList()));
+        strategy.put("totalDebts", sortedDebts.size());
+        strategy.put("totalBalance", sortedDebts.stream()
+                .map(Debt::getCurrentBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        return strategy;
+    }
+    public Map<String, Object> generateAvalancheStrategy(List<Debt> debts) {
+        // Sort by interest rate (highest first) for avalanche method
+        List<Debt> sortedDebts = debts.stream()
+                .filter(debt -> debt.getCurrentBalance() != null && debt.getCurrentBalance().compareTo(BigDecimal.ZERO) > 0 && debt.getInterestRate() != null)
                 .sorted(Comparator.comparing(Debt::getInterestRate).reversed())
                 .collect(Collectors.toList());
-        
-        comparison.put("snowball", Map.of(
-            "debtOrder", snowballOrder.stream().map(Debt::getId).collect(Collectors.toList()),
-            "firstDebt", snowballOrder.isEmpty() ? null : snowballOrder.get(0).getName(),
-            "firstDebtBalance", snowballOrder.isEmpty() ? BigDecimal.ZERO : snowballOrder.get(0).getCurrentBalance()
-        ));
-        
-        comparison.put("avalanche", Map.of(
-            "debtOrder", avalancheOrder.stream().map(Debt::getId).collect(Collectors.toList()),
-            "firstDebt", avalancheOrder.isEmpty() ? null : avalancheOrder.get(0).getName(),
-            "firstDebtInterestRate", avalancheOrder.isEmpty() ? BigDecimal.ZERO : avalancheOrder.get(0).getInterestRate()
-        ));
-        
-        return comparison;
+        Map<String, Object> strategy = new HashMap<>();
+        strategy.put("strategyType", "avalanche");
+        strategy.put("description", "Pay off debts starting with the highest interest rate first");
+        strategy.put("debtOrder", sortedDebts.stream().map(Debt::getId).collect(Collectors.toList()));
+        strategy.put("totalDebts", sortedDebts.size());
+        strategy.put("totalBalance", sortedDebts.stream()
+                .map(Debt::getCurrentBalance)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        return strategy;
     }
 
     @Override
